@@ -1,0 +1,26 @@
+{
+	"type" : "Standard",
+	"core" : true,
+	"name" : "Libpointmatcher",
+	"icon" : ":/CC/plugin/qLibpointmatcher/images/iconLibpointmatcher.png",
+	"description": "Libpoint matcher for subsampling and ICP",
+	"authors" : [
+    {
+      "name": "Integrator: Alexandre Grenier (Dagata-mining)"
+    }
+	],
+	"references" : [
+		{
+			"text": "Libpointmatcher",
+			"author": "Francois Pomerleau",
+			"url": "https://github.com/ethz-asl/libpointmatcher"
+		},
+		{
+			"text": "Libpointmatcher"
+		},
+		{
+			"text": "Documentation",
+			"url": "https://libpointmatcher.readthedocs.io/"
+		}
+	]
+}

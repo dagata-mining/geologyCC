@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/CC/plugin/qCanupoPlugin">
+        <file>info.json</file>
+        <file>images/iconClassify.png</file>
+        <file>images/iconCreate.png</file>
+        <file>images/Logo_cnrs_eub_eec.png</file>
+    </qresource>
+</RCC>

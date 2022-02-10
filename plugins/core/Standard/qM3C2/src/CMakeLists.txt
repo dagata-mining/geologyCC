@@ -1,0 +1,9 @@
+
+target_sources( ${PROJECT_NAME}
+	PRIVATE
+		${CMAKE_CURRENT_LIST_DIR}/qM3C2.cpp
+		${CMAKE_CURRENT_LIST_DIR}/qM3C2Dialog.cpp
+		${CMAKE_CURRENT_LIST_DIR}/qM3C2DisclaimerDialog.cpp
+		${CMAKE_CURRENT_LIST_DIR}/qM3C2Process.cpp
+		${CMAKE_CURRENT_LIST_DIR}/qM3C2Tools.cpp
+)

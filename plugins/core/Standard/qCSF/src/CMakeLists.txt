@@ -1,0 +1,11 @@
+
+target_sources( ${PROJECT_NAME}
+	PRIVATE
+		${CMAKE_CURRENT_LIST_DIR}/ccCSFDlg.cpp
+		${CMAKE_CURRENT_LIST_DIR}/Cloth.cpp
+		${CMAKE_CURRENT_LIST_DIR}/Cloud2CloudDist.cpp
+		${CMAKE_CURRENT_LIST_DIR}/CSF.cpp
+		${CMAKE_CURRENT_LIST_DIR}/Particle.cpp
+		${CMAKE_CURRENT_LIST_DIR}/qCSF.cpp
+		${CMAKE_CURRENT_LIST_DIR}/Rasterization.cpp
+)

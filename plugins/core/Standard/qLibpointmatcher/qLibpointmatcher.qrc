@@ -1,0 +1,18 @@
+<RCC>
+  <qresource prefix="/CC/plugin/qLibpointmatcher">
+    <file>images/libpointmatcher.png</file>
+    <file>images/iconLibpointmatcher.png</file>
+    <file>images/iconSwap.png</file>
+    <file>images/iconLoad.png</file>
+    <file>images/iconSave.png</file>
+    <file>images/smallCancel.png</file>
+    <file>images/up-chevron.png</file>
+    <file>images/down-chevron.png</file>
+    <file>images/ccPlus.png</file>
+    <file>images/filterIcon.png</file>
+    <file>images/outlierIcon.png</file>
+    <file>images/ICPIcon.png</file>
+    <file>images/convergenceIcon.png</file>
+    <file>info.json</file>
+  </qresource>
+</RCC>

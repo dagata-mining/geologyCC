@@ -1,0 +1,4211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LibpointmatcherOutlierDialog</class>
+ <widget class="QDialog" name="LibpointmatcherOutlierDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>770</width>
+    <height>501</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Libpointmatcher</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>:/CC/plugin/qLibpointmatcher/images/iconLibpointmatcher.png</normaloff>:/CC/plugin/qLibpointmatcher/images/iconLibpointmatcher.png</iconset>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_2">
+   <item>
+    <widget class="QTabWidget" name="filterTabWidget">
+     <property name="currentIndex">
+      <number>1</number>
+     </property>
+     <widget class="QWidget" name="filterParams">
+      <property name="accessibleName">
+       <string/>
+      </property>
+      <attribute name="title">
+       <string>Filter Params</string>
+      </attribute>
+      <widget class="QGroupBox" name="mainGroupBox">
+       <property name="geometry">
+        <rect>
+         <x>9</x>
+         <y>9</y>
+         <width>721</width>
+         <height>53</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Subsampling Types</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="2">
+         <widget class="QComboBox" name="filterType">
+          <property name="currentIndex">
+           <number>2</number>
+          </property>
+          <item>
+           <property name="text">
+            <string>MaximumDensityFilter</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>DistanceLimitFilter</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>MaximumPointCountFilter</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>MaximumQuantileAxisFilter</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>RandomSamplingFilter</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>ShadowPointFIlter</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>VoxelGridFilter</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>OctreeGridFilter</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>NormalSpaceSamplingFilter</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>CovarianceSamplingFilter</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>SpectralDecompositionFIltrer</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Model</string>
+          </property>
+          <property name="buddy">
+           <cstring>mainGroupBox</cstring>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QStackedWidget" name="Options">
+       <property name="geometry">
+        <rect>
+         <x>9</x>
+         <y>68</y>
+         <width>728</width>
+         <height>301</height>
+        </rect>
+       </property>
+       <property name="currentIndex">
+        <number>2</number>
+       </property>
+       <widget class="QWidget" name="MaximumDensityFilter">
+        <widget class="QGroupBox" name="groupBox">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>393</width>
+           <height>53</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QLabel" name="maxDensityTitle">
+            <property name="text">
+             <string>The desired maximum density of points in points/m³</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="maxDensity">
+            <property name="suffix">
+             <string> pts/m3</string>
+            </property>
+            <property name="decimals">
+             <number>2</number>
+            </property>
+            <property name="minimum">
+             <double>0.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>10000000.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>10.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="DistanceLimitFilter">
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>311</width>
+           <height>167</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QLabel" name="distanceThresholdTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>20</y>
+            <width>291</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Distance threshold</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="distanceThreshold">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>40</y>
+            <width>101</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string> m</string>
+          </property>
+          <property name="decimals">
+           <number>2</number>
+          </property>
+          <property name="minimum">
+           <double>-1000000.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10000000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
+          <property name="value">
+           <double>1.000000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="dimRadialXYZTiltle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>70</y>
+            <width>261</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Dimension over which the distance is thresholded </string>
+          </property>
+         </widget>
+         <widget class="QRadioButton" name="dimX">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>90</y>
+            <width>41</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>X</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
+         </widget>
+         <widget class="QRadioButton" name="dimY">
+          <property name="geometry">
+           <rect>
+            <x>50</x>
+            <y>90</y>
+            <width>31</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Y</string>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
+         </widget>
+         <widget class="QRadioButton" name="dimZ">
+          <property name="geometry">
+           <rect>
+            <x>90</x>
+            <y>90</y>
+            <width>31</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Z</string>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
+         </widget>
+         <widget class="QLabel" name="keepDimTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>110</y>
+            <width>261</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Keep points inside or outside</string>
+          </property>
+         </widget>
+         <widget class="QRadioButton" name="keepDimInside">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>130</y>
+            <width>51</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Inside</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_2</string>
+          </attribute>
+         </widget>
+         <widget class="QRadioButton" name="keepDimOuside">
+          <property name="geometry">
+           <rect>
+            <x>70</x>
+            <y>130</y>
+            <width>82</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Outside</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_2</string>
+          </attribute>
+         </widget>
+         <widget class="QRadioButton" name="dimRadial">
+          <property name="geometry">
+           <rect>
+            <x>130</x>
+            <y>90</y>
+            <width>71</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Radial</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="MaximumPointCountFilter">
+        <widget class="QGroupBox" name="groupBox_3">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>290</width>
+           <height>130</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QLabel" name="maxPointTiltle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>23</y>
+            <width>246</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Number of points beyond which subsampling occurs</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="maxPointCount">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>42</y>
+            <width>87</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string> pts</string>
+          </property>
+          <property name="decimals">
+           <number>0</number>
+          </property>
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10000000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>100.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>30000.000000000000000</double>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="srandSeed">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>87</y>
+            <width>69</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string/>
+          </property>
+          <property name="decimals">
+           <number>0</number>
+          </property>
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10000000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="stepType">
+           <enum>QAbstractSpinBox::DefaultStepType</enum>
+          </property>
+          <property name="value">
+           <double>0.000000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="srandSeedTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>68</y>
+            <width>270</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Randomize (Choose any number to have a new random)</string>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="MaximumQuantileFilter">
+        <widget class="QGroupBox" name="groupBox_4">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>531</width>
+           <height>181</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QLabel" name="ratioQuantileTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>20</y>
+            <width>511</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Quantile threshold. Points whose distance exceed this threshold are rejected by the filter (1=100%)</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="ratioQuantile">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>40</y>
+            <width>101</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string>0</string>
+          </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
+          <property name="minimum">
+           <double>0.001000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>0.999000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.500000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="dimQuantileTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>70</y>
+            <width>371</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Dimension over which the distance (from the center) is thresholded</string>
+          </property>
+         </widget>
+         <widget class="QRadioButton" name="dimY_Quantile">
+          <property name="geometry">
+           <rect>
+            <x>50</x>
+            <y>90</y>
+            <width>31</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Y</string>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_3</string>
+          </attribute>
+         </widget>
+         <widget class="QRadioButton" name="dimX_Quantile">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>90</y>
+            <width>41</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>X</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_3</string>
+          </attribute>
+         </widget>
+         <widget class="QRadioButton" name="dimZ_Quantile">
+          <property name="geometry">
+           <rect>
+            <x>90</x>
+            <y>90</y>
+            <width>31</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Z</string>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_3</string>
+          </attribute>
+         </widget>
+         <widget class="QRadioButton" name="beyondQuantile">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>130</y>
+            <width>71</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Beyond</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_9</string>
+          </attribute>
+         </widget>
+         <widget class="QRadioButton" name="underQuantile">
+          <property name="geometry">
+           <rect>
+            <x>80</x>
+            <y>130</y>
+            <width>61</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Under</string>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_9</string>
+          </attribute>
+         </widget>
+         <widget class="QLabel" name="dimQuantileTitle_2">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>110</y>
+            <width>371</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Beyond or under threshold</string>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="RandomSamplingFilter">
+        <widget class="QGroupBox" name="groupBox_5">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>531</width>
+           <height>82</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QLabel" name="randomRatioTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>20</y>
+            <width>511</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Probability that a point is kept (1/decimation factor)</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="randomRatio">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>40</y>
+            <width>101</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string>0</string>
+          </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.750000000000000</double>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="ShadowPointFilter">
+        <widget class="QGroupBox" name="groupBox_6">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>0</y>
+           <width>601</width>
+           <height>77</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QLabel" name="shadowNormalsTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>20</y>
+            <width>581</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Shadow points are noisy points usually located at point cloud edge discontinuities. Use existing normals (if available)</string>
+          </property>
+         </widget>
+         <widget class="QCheckBox" name="shadowNormals">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>40</y>
+            <width>121</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Use Existing Normals</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="VoxelSizeFilter">
+        <widget class="QGroupBox" name="groupBox_7">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>361</width>
+           <height>147</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QLabel" name="voxelSizeExTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>20</y>
+            <width>311</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>*This method is slow* Use Octree Grid for faster results </string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="voxelSizeX">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>60</y>
+            <width>81</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string> m</string>
+          </property>
+          <property name="decimals">
+           <number>2</number>
+          </property>
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10000000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
+          <property name="value">
+           <double>1.000000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="voxelSizeTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>40</y>
+            <width>91</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Size of voxel</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="voxelSizeXTitle">
+          <property name="geometry">
+           <rect>
+            <x>11</x>
+            <y>61</y>
+            <width>16</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>X</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="voxelSizeYTitle">
+          <property name="geometry">
+           <rect>
+            <x>121</x>
+            <y>61</y>
+            <width>16</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Y</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="voxelSizeY">
+          <property name="geometry">
+           <rect>
+            <x>140</x>
+            <y>60</y>
+            <width>81</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string> m</string>
+          </property>
+          <property name="decimals">
+           <number>2</number>
+          </property>
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10000000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
+          <property name="value">
+           <double>1.000000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="voxelSizeZTitle">
+          <property name="geometry">
+           <rect>
+            <x>231</x>
+            <y>61</y>
+            <width>16</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Z</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="voxelSizeZ">
+          <property name="geometry">
+           <rect>
+            <x>250</x>
+            <y>60</y>
+            <width>81</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string> m</string>
+          </property>
+          <property name="decimals">
+           <number>2</number>
+          </property>
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10000000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
+          <property name="value">
+           <double>1.000000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="voxelCentroidTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>90</y>
+            <width>341</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Down-sample by using the centroid of each voxel or center</string>
+          </property>
+         </widget>
+         <widget class="QRadioButton" name="voxelCenter">
+          <property name="geometry">
+           <rect>
+            <x>170</x>
+            <y>110</y>
+            <width>141</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Center</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_4</string>
+          </attribute>
+         </widget>
+         <widget class="QRadioButton" name="voxelCentroid">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>110</y>
+            <width>151</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Centroid (Center of mass)</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_4</string>
+          </attribute>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="OctreeGridFilter">
+        <widget class="QGroupBox" name="groupBox_8">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>721</width>
+           <height>187</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QLabel" name="stopPointOctreeTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>20</y>
+            <width>361</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Number of point under which the octree stop dividing</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="octreeSampleTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>130</y>
+            <width>341</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Method to sample the octree</string>
+          </property>
+         </widget>
+         <widget class="QRadioButton" name="octreeSampleRandom">
+          <property name="geometry">
+           <rect>
+            <x>110</x>
+            <y>150</y>
+            <width>141</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Random</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_5</string>
+          </attribute>
+         </widget>
+         <widget class="QRadioButton" name="octreeSampleFirst">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>150</y>
+            <width>91</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>First Point</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_5</string>
+          </attribute>
+         </widget>
+         <widget class="QDoubleSpinBox" name="stopPointOctree">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>40</y>
+            <width>101</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string> pts</string>
+          </property>
+          <property name="decimals">
+           <number>0</number>
+          </property>
+          <property name="minimum">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10000000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>10.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>1.000000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="octreeSizeTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>70</y>
+            <width>321</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Size of the bounding box under which the octree stop dividing</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="octreeSize">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>90</y>
+            <width>81</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string> m</string>
+          </property>
+          <property name="decimals">
+           <number>2</number>
+          </property>
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10000000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.000000000000000</double>
+          </property>
+         </widget>
+         <widget class="QRadioButton" name="octreeSampleCentroid">
+          <property name="geometry">
+           <rect>
+            <x>190</x>
+            <y>150</y>
+            <width>71</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Centroid</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_5</string>
+          </attribute>
+         </widget>
+         <widget class="QRadioButton" name="octreeSampleMedian">
+          <property name="geometry">
+           <rect>
+            <x>270</x>
+            <y>150</y>
+            <width>71</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Median</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_5</string>
+          </attribute>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="NormalSpaceSamplingFilter">
+        <widget class="QGroupBox" name="groupBox_9">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>311</width>
+           <height>227</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QLabel" name="maxPointCountNormalTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>20</y>
+            <width>291</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Number of point to select</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="maxPointCountNormal">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>40</y>
+            <width>101</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string> pts</string>
+          </property>
+          <property name="decimals">
+           <number>0</number>
+          </property>
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10000000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>100.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>5000.000000000000000</double>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="epsilonNormal">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>90</y>
+            <width>101</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string>°</string>
+          </property>
+          <property name="decimals">
+           <number>1</number>
+          </property>
+          <property name="minimum">
+           <double>3.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>180.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="stepType">
+           <enum>QAbstractSpinBox::DefaultStepType</enum>
+          </property>
+          <property name="value">
+           <double>8.000000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="epsilonNormalTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>70</y>
+            <width>291</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Step of discretization for the angle spaces</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="srandNormal">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>140</y>
+            <width>101</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string/>
+          </property>
+          <property name="decimals">
+           <number>0</number>
+          </property>
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10000000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="stepType">
+           <enum>QAbstractSpinBox::DefaultStepType</enum>
+          </property>
+          <property name="value">
+           <double>0.000000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="srandNormalTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>120</y>
+            <width>291</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Randomize (Choose any number to have a new random)</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="normalNormalsTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>170</y>
+            <width>181</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Use existing normals (if available)</string>
+          </property>
+         </widget>
+         <widget class="QCheckBox" name="normalNormals_2">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>190</y>
+            <width>121</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Use Existing Normals</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="CovarianceSamplingFilter">
+        <widget class="QGroupBox" name="groupBox_10">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>351</width>
+           <height>177</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QLabel" name="maxPointCountCovTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>20</y>
+            <width>291</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Number of point to select</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="maxPointCountCov">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>40</y>
+            <width>101</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string> pts</string>
+          </property>
+          <property name="decimals">
+           <number>0</number>
+          </property>
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10000000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>100.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>5000.000000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="torqueTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>70</y>
+            <width>291</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Method for torque normalization</string>
+          </property>
+         </widget>
+         <widget class="QRadioButton" name="torqueAvg">
+          <property name="geometry">
+           <rect>
+            <x>120</x>
+            <y>90</y>
+            <width>141</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Average</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_6</string>
+          </attribute>
+         </widget>
+         <widget class="QRadioButton" name="torqueMax">
+          <property name="geometry">
+           <rect>
+            <x>190</x>
+            <y>90</y>
+            <width>151</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Maximum</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_6</string>
+          </attribute>
+         </widget>
+         <widget class="QRadioButton" name="torqueNo">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>90</y>
+            <width>111</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>No normalization</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_6</string>
+          </attribute>
+         </widget>
+         <widget class="QCheckBox" name="covNormals">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>140</y>
+            <width>121</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Use Existing Normals</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+         <widget class="QLabel" name="covNormalsTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>120</y>
+            <width>181</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Use existing normals (if available)</string>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="SPDFFilter">
+        <widget class="QGroupBox" name="groupBox_11">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>351</width>
+           <height>271</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QLabel" name="spdfKnnTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>20</y>
+            <width>291</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Number of neighbors to consider</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="spdfKnn">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>40</y>
+            <width>101</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string> pts</string>
+          </property>
+          <property name="decimals">
+           <number>0</number>
+          </property>
+          <property name="minimum">
+           <double>6.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10000000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>10.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>50.000000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="spdfSigmaTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>70</y>
+            <width>291</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Scale of the vote (in m) for the Tensor Voting framework</string>
+          </property>
+         </widget>
+         <widget class="QCheckBox" name="spdfNormals">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>250</y>
+            <width>121</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Use Existing Normals</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+         <widget class="QLabel" name="spdfNormalsTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>230</y>
+            <width>181</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Use existing normals (if available)</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="spdfSigma">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>90</y>
+            <width>101</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string> m</string>
+          </property>
+          <property name="decimals">
+           <number>2</number>
+          </property>
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10000000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>10.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.200000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="spdfRadiusTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>120</y>
+            <width>291</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Radius to control the scale of the uniform distribution</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="spdfRadius">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>140</y>
+            <width>101</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string> m</string>
+          </property>
+          <property name="decimals">
+           <number>2</number>
+          </property>
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10000000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>10.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.400000000000000</double>
+          </property>
+         </widget>
+         <widget class="QSpinBox" name="spdfIter">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>190</y>
+            <width>101</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="maximum">
+           <number>1000000</number>
+          </property>
+          <property name="value">
+           <number>10</number>
+          </property>
+         </widget>
+         <widget class="QLabel" name="SpdfIterTitle">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>170</y>
+            <width>291</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Number max of iterations to do</string>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+      </widget>
+      <widget class="QFrame" name="rmsFrame">
+       <property name="geometry">
+        <rect>
+         <x>9</x>
+         <y>358</y>
+         <width>18</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+       </layout>
+      </widget>
+      <widget class="QToolButton" name="AddRef">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>400</y>
+         <width>71</width>
+         <height>19</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Add To Ref</string>
+       </property>
+      </widget>
+      <widget class="QToolButton" name="AddRead">
+       <property name="geometry">
+        <rect>
+         <x>90</x>
+         <y>400</y>
+         <width>71</width>
+         <height>19</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Add To Read</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="noFilterSubsampling">
+       <property name="geometry">
+        <rect>
+         <x>200</x>
+         <y>400</y>
+         <width>161</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>No Filter Subsampling</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="normals">
+      <attribute name="title">
+       <string>Normals</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="QFrame" name="normParamsFrame">
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QGroupBox" name="groupBox_12">
+            <property name="title">
+             <string>Options from Libpointmatcher normal creator</string>
+            </property>
+            <widget class="QDoubleSpinBox" name="normalsKnn">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>50</y>
+               <width>101</width>
+               <height>22</height>
+              </rect>
+             </property>
+             <property name="suffix">
+              <string> pts</string>
+             </property>
+             <property name="decimals">
+              <number>0</number>
+             </property>
+             <property name="minimum">
+              <double>3.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>99999.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>1.000000000000000</double>
+             </property>
+             <property name="value">
+              <double>10.000000000000000</double>
+             </property>
+            </widget>
+            <widget class="QLabel" name="normalsKnnTitle">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>30</y>
+               <width>481</width>
+               <height>16</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>Number of neighboring points (including the point itself) to consider when extracting surface normal</string>
+             </property>
+            </widget>
+            <widget class="QDoubleSpinBox" name="normalsEpsilon">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>100</y>
+               <width>101</width>
+               <height>22</height>
+              </rect>
+             </property>
+             <property name="suffix">
+              <string/>
+             </property>
+             <property name="decimals">
+              <number>1</number>
+             </property>
+             <property name="minimum">
+              <double>0.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>99999.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>1.000000000000000</double>
+             </property>
+             <property name="value">
+              <double>0.000000000000000</double>
+             </property>
+            </widget>
+            <widget class="QLabel" name="normalsKnnTitle_2">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>80</y>
+               <width>241</width>
+               <height>16</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>Approximation used in nearest neighbor search</string>
+             </property>
+            </widget>
+            <widget class="QLabel" name="normalsKnnTitle_3">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>160</y>
+               <width>561</width>
+               <height>16</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>*Some filters require normals. If the cloud doesn't have any normals, Libpointmacther will create it's own normals</string>
+             </property>
+            </widget>
+            <widget class="QLabel" name="normalsKnnTitle_4">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>180</y>
+               <width>561</width>
+               <height>16</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>* It is recommended to use CloudCompare Normals to have more options</string>
+             </property>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="filters">
+      <attribute name="title">
+       <string>Filters</string>
+      </attribute>
+      <widget class="QListWidget" name="listFiltersRef">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>371</width>
+         <height>141</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QFrame" name="frame">
+       <property name="geometry">
+        <rect>
+         <x>9</x>
+         <y>356</y>
+         <width>16</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_8">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+       </layout>
+      </widget>
+      <widget class="QToolButton" name="switchDownFilterRef">
+       <property name="geometry">
+        <rect>
+         <x>390</x>
+         <y>50</y>
+         <width>25</width>
+         <height>19</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>:/CC/plugin/qLibpointmatcher/images/down-chevron.png</normaloff>:/CC/plugin/qLibpointmatcher/images/down-chevron.png</iconset>
+       </property>
+      </widget>
+      <widget class="QToolButton" name="deleteOneFilterRef">
+       <property name="geometry">
+        <rect>
+         <x>390</x>
+         <y>149</y>
+         <width>25</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>:/CC/plugin/qLibpointmatcher/images/smallCancel.png</normaloff>:/CC/plugin/qLibpointmatcher/images/smallCancel.png</iconset>
+       </property>
+      </widget>
+      <widget class="QToolButton" name="switchUpFilterRef">
+       <property name="geometry">
+        <rect>
+         <x>390</x>
+         <y>30</y>
+         <width>25</width>
+         <height>19</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>:/CC/plugin/qLibpointmatcher/images/up-chevron.png</normaloff>:/CC/plugin/qLibpointmatcher/images/up-chevron.png</iconset>
+       </property>
+      </widget>
+      <widget class="QListWidget" name="listFiltersRead">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>200</y>
+         <width>371</width>
+         <height>161</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QToolButton" name="switchUpFilterRead">
+       <property name="geometry">
+        <rect>
+         <x>390</x>
+         <y>201</y>
+         <width>25</width>
+         <height>19</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>:/CC/plugin/qLibpointmatcher/images/up-chevron.png</normaloff>:/CC/plugin/qLibpointmatcher/images/up-chevron.png</iconset>
+       </property>
+      </widget>
+      <widget class="QToolButton" name="switchDownFilterRead">
+       <property name="geometry">
+        <rect>
+         <x>390</x>
+         <y>221</y>
+         <width>25</width>
+         <height>19</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>:/CC/plugin/qLibpointmatcher/images/down-chevron.png</normaloff>:/CC/plugin/qLibpointmatcher/images/down-chevron.png</iconset>
+       </property>
+      </widget>
+      <widget class="QToolButton" name="deleteOneFilterRead">
+       <property name="geometry">
+        <rect>
+         <x>390</x>
+         <y>340</y>
+         <width>25</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>:/CC/plugin/qLibpointmatcher/images/smallCancel.png</normaloff>:/CC/plugin/qLibpointmatcher/images/smallCancel.png</iconset>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_15">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>10</y>
+         <width>121</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Reference Cloud Filters</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_16">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>180</y>
+         <width>181</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Read Cloud (To be ICP Cloud Filters)</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="Outliers">
+      <attribute name="title">
+       <string>Outliers</string>
+      </attribute>
+      <widget class="QGroupBox" name="mainGroupBox_2">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>10</y>
+         <width>728</width>
+         <height>53</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Outliers Types</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="2">
+         <widget class="QComboBox" name="outlierType">
+          <property name="currentIndex">
+           <number>3</number>
+          </property>
+          <item>
+           <property name="text">
+            <string>MaxDistOutlier</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>MinDistOutlier</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>MedianDistOutlier</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>TrimmedDistOutlier</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>VarTrimmedDistOutlier</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>SurfaceNormalOutlier</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>RobustOutlier</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>None</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_2">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Model</string>
+          </property>
+          <property name="buddy">
+           <cstring>mainGroupBox</cstring>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QStackedWidget" name="stackedOutlier">
+       <property name="geometry">
+        <rect>
+         <x>-1</x>
+         <y>79</y>
+         <width>751</width>
+         <height>291</height>
+        </rect>
+       </property>
+       <property name="currentIndex">
+        <number>3</number>
+       </property>
+       <widget class="QWidget" name="MaxDistOutlier">
+        <widget class="QGroupBox" name="groupBox_13">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>0</y>
+           <width>561</width>
+           <height>171</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QLabel" name="maxDistOutlierTitle">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>50</y>
+            <width>246</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Threshold distance (Euclidean norm)</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="maxDistOutlier">
+          <property name="geometry">
+           <rect>
+            <x>200</x>
+            <y>50</y>
+            <width>121</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string> m</string>
+          </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
+          <property name="minimum">
+           <double>0.001000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10000000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="value">
+           <double>1.000000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_3">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>90</y>
+            <width>421</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>This filter considers as outlier links whose norms are above a fix threshold.</string>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="MinDistOutlier">
+        <widget class="QGroupBox" name="groupBox_14">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>0</y>
+           <width>561</width>
+           <height>171</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QLabel" name="minDistOutlierTitle">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>50</y>
+            <width>246</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Threshold distance (Euclidean norm)</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="minDistOutlier">
+          <property name="geometry">
+           <rect>
+            <x>200</x>
+            <y>50</y>
+            <width>121</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string> m</string>
+          </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
+          <property name="minimum">
+           <double>0.001000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10000000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="value">
+           <double>1.000000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_4">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>90</y>
+            <width>421</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>This filter considers as outlier links whose norms are below a threshold.</string>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="MedianDistOutlier">
+        <widget class="QGroupBox" name="groupBox_15">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>10</y>
+           <width>561</width>
+           <height>171</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QLabel" name="medianDistOutlierTitle">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>50</y>
+            <width>246</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Points farther away factor * median will be considered outliers.</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="medianDistOutlier">
+          <property name="geometry">
+           <rect>
+            <x>280</x>
+            <y>50</y>
+            <width>121</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string> m</string>
+          </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
+          <property name="minimum">
+           <double>0.001000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10000000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="value">
+           <double>3.000000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_5">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>90</y>
+            <width>501</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>This filter considers as outlier links whose norms are above the median link norms times a factor.</string>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="TrimmedDistOutlier">
+        <widget class="QGroupBox" name="groupBox_16">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>0</y>
+           <width>631</width>
+           <height>171</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QLabel" name="trimmedOutlierRatioTitle">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>50</y>
+            <width>51</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Ratio</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="trimmedOutlierRatio">
+          <property name="geometry">
+           <rect>
+            <x>70</x>
+            <y>50</y>
+            <width>121</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string/>
+          </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
+          <property name="minimum">
+           <double>0.001000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.850000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_6">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>90</y>
+            <width>601</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Hard rejection threshold using quantile. This filter considers as inlier a certain percentage of the links with the smallest norms</string>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="VarTrimmedDistOutlier">
+        <widget class="QGroupBox" name="groupBox_17">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>10</y>
+           <width>631</width>
+           <height>171</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QLabel" name="varTrimmedOutlierMaxTitle">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>50</y>
+            <width>51</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Max Ratio</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="varTrimmedOutlierMin">
+          <property name="geometry">
+           <rect>
+            <x>250</x>
+            <y>50</y>
+            <width>121</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string/>
+          </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
+          <property name="minimum">
+           <double>0.001000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.050000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_7">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>90</y>
+            <width>601</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Hard rejection threshold using quantile and variable ratio</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="varTrimmedOutlierMinTitle">
+          <property name="geometry">
+           <rect>
+            <x>200</x>
+            <y>50</y>
+            <width>51</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Min Ratio</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="varTrimmedOutlierMax">
+          <property name="geometry">
+           <rect>
+            <x>70</x>
+            <y>50</y>
+            <width>121</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string/>
+          </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
+          <property name="minimum">
+           <double>0.001000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.990000000000000</double>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="varTrimmedOutlierLambda">
+          <property name="geometry">
+           <rect>
+            <x>70</x>
+            <y>130</y>
+            <width>121</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string/>
+          </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
+          <property name="minimum">
+           <double>0.001000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>1000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
+          <property name="value">
+           <double>2.350000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="varTrimmedOutlierLambdaTitle">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>130</y>
+            <width>51</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Lamda</string>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="SurfaceOutlier">
+        <widget class="QGroupBox" name="groupBox_18">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>0</y>
+           <width>631</width>
+           <height>171</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QLabel" name="surfaceOutlierAngleTitle">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>50</y>
+            <width>51</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Max Angle</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="surfaceOutlierAngle">
+          <property name="geometry">
+           <rect>
+            <x>80</x>
+            <y>50</y>
+            <width>121</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string/>
+          </property>
+          <property name="decimals">
+           <number>1</number>
+          </property>
+          <property name="minimum">
+           <double>0.100000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>360.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>180.000000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_8">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>90</y>
+            <width>601</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Hard rejection threshold using the angle between the surface normal vector of the reading and the reference.</string>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="RobustOutlier">
+        <widget class="QGroupBox" name="groupBox_19">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>0</y>
+           <width>731</width>
+           <height>251</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QLabel" name="genericOutlierThresholdTitle">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>30</y>
+            <width>51</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Function</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="robustOutlierTuning">
+          <property name="geometry">
+           <rect>
+            <x>90</x>
+            <y>60</y>
+            <width>121</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string/>
+          </property>
+          <property name="decimals">
+           <number>4</number>
+          </property>
+          <property name="minimum">
+           <double>0.000100000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10000000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
+          <property name="value">
+           <double>1.000000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_9">
+          <property name="geometry">
+           <rect>
+            <x>180</x>
+            <y>30</y>
+            <width>341</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Robust weight function. 8 robust functions to choose</string>
+          </property>
+         </widget>
+         <widget class="QRadioButton" name="octreeSampleRandom_2">
+          <property name="geometry">
+           <rect>
+            <x>120</x>
+            <y>120</y>
+            <width>141</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Mad</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_7</string>
+          </attribute>
+         </widget>
+         <widget class="QRadioButton" name="robustOutlierScaleNone">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>120</y>
+            <width>91</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>None</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_7</string>
+          </attribute>
+         </widget>
+         <widget class="QRadioButton" name="robustOutlierDistancePlane">
+          <property name="geometry">
+           <rect>
+            <x>120</x>
+            <y>170</y>
+            <width>141</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Point to plane</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+         </widget>
+         <widget class="QRadioButton" name="robustOutlierScaleMad">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>170</y>
+            <width>91</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Point to point</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_10">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>60</y>
+            <width>71</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Tuning</string>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="optionRobust">
+          <property name="geometry">
+           <rect>
+            <x>90</x>
+            <y>30</y>
+            <width>69</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <item>
+           <property name="text">
+            <string>Cauchy</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Welsch</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Switchable Constraint</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Geman- McClure</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Tukey</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Huber</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>L1</string>
+           </property>
+          </item>
+         </widget>
+         <widget class="QLabel" name="label_11">
+          <property name="geometry">
+           <rect>
+            <x>230</x>
+            <y>60</y>
+            <width>341</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Tuning parameter used to limit the influence of outliers</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_12">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>90</y>
+            <width>341</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Scale Estimator</string>
+          </property>
+         </widget>
+         <widget class="QRadioButton" name="robustOutlierScaleBerg">
+          <property name="geometry">
+           <rect>
+            <x>200</x>
+            <y>120</y>
+            <width>141</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Berg</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_7</string>
+          </attribute>
+         </widget>
+         <widget class="QLabel" name="label_13">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>140</y>
+            <width>341</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Distance Type Value</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_14">
+          <property name="geometry">
+           <rect>
+            <x>280</x>
+            <y>120</y>
+            <width>71</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Iteration</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="robustOutlierIteration">
+          <property name="geometry">
+           <rect>
+            <x>350</x>
+            <y>120</y>
+            <width>121</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string/>
+          </property>
+          <property name="decimals">
+           <number>0</number>
+          </property>
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>100.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.000000000000000</double>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="kdTree">
+      <property name="accessibleName">
+       <string/>
+      </property>
+      <attribute name="title">
+       <string>KDTreeMatcher</string>
+      </attribute>
+      <widget class="QGroupBox" name="groupBox_20">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>10</y>
+         <width>591</width>
+         <height>271</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Options</string>
+       </property>
+       <widget class="QDoubleSpinBox" name="kdTreeKnn">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>40</y>
+          <width>101</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="suffix">
+         <string> pts</string>
+        </property>
+        <property name="decimals">
+         <number>0</number>
+        </property>
+        <property name="minimum">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>10000000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>4.000000000000000</double>
+        </property>
+       </widget>
+       <widget class="QLabel" name="kdTreeKnnTitle">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>20</y>
+          <width>291</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Number of neighbors to consider (knn)</string>
+        </property>
+       </widget>
+       <widget class="QDoubleSpinBox" name="kdTreeEpsilon">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>90</y>
+          <width>101</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="suffix">
+         <string> pts</string>
+        </property>
+        <property name="decimals">
+         <number>0</number>
+        </property>
+        <property name="minimum">
+         <double>0.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>10000000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+       <widget class="QLabel" name="kdTreeEpsilonTitle">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>70</y>
+          <width>441</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Approximation to use for the nearest-neighbor search (Epsilon)</string>
+        </property>
+       </widget>
+       <widget class="QRadioButton" name="kdTreeTree">
+        <property name="geometry">
+         <rect>
+          <x>210</x>
+          <y>150</y>
+          <width>141</width>
+          <height>17</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Tree Heap (+30knn)</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroup_8</string>
+        </attribute>
+       </widget>
+       <widget class="QRadioButton" name="kdTreeLinear">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>150</y>
+          <width>91</width>
+          <height>17</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Linear Heap</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroup_8</string>
+        </attribute>
+       </widget>
+       <widget class="QRadioButton" name="kdTreeBrute">
+        <property name="geometry">
+         <rect>
+          <x>110</x>
+          <y>150</y>
+          <width>91</width>
+          <height>17</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Brute Force</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroup_8</string>
+        </attribute>
+       </widget>
+       <widget class="QLabel" name="kdTreeEpsilonTitle_2">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>130</y>
+          <width>141</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Nabo search type.</string>
+        </property>
+       </widget>
+       <widget class="QDoubleSpinBox" name="kdTreeMaxDist">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>200</y>
+          <width>101</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="suffix">
+         <string> m</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>0.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>10000000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>1000.000000000000000</double>
+        </property>
+       </widget>
+       <widget class="QLabel" name="kdTreeMaxDistTitle">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>180</y>
+          <width>441</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Maximum distance to consider for neighbors</string>
+        </property>
+       </widget>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="tab">
+      <attribute name="title">
+       <string>Minimizer</string>
+      </attribute>
+      <widget class="QGroupBox" name="mainGroupBox_3">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>10</y>
+         <width>728</width>
+         <height>53</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Minimizer Type</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="0" column="2">
+         <widget class="QComboBox" name="minimizerType">
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <item>
+           <property name="text">
+            <string>PointToPlane</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>PointToPlaneWithCov</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>PointToPoint</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>PointToPointWithCov</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>PointToSimilarity (Scaling)</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_17">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Model</string>
+          </property>
+          <property name="buddy">
+           <cstring>mainGroupBox</cstring>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QStackedWidget" name="stackedMinimizer">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>70</y>
+         <width>751</width>
+         <height>291</height>
+        </rect>
+       </property>
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <widget class="QWidget" name="pointToPlane">
+        <widget class="QGroupBox" name="groupBox_21">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>0</y>
+           <width>561</width>
+           <height>171</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QLabel" name="label_19">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>30</y>
+            <width>421</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>This minimizer can limit the transformation</string>
+          </property>
+         </widget>
+         <widget class="QRadioButton" name="pplaneforce2D">
+          <property name="geometry">
+           <rect>
+            <x>240</x>
+            <y>50</y>
+            <width>141</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>2D (X,Y,Yaw)</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+         </widget>
+         <widget class="QRadioButton" name="pplaneforce4DOF">
+          <property name="geometry">
+           <rect>
+            <x>120</x>
+            <y>50</y>
+            <width>111</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>4DOF (x,y,z,yaw)</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+         </widget>
+         <widget class="QRadioButton" name="pplaneforce6DOF">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>50</y>
+            <width>91</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>6DOF (Normal)</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+         <widget class="QCheckBox" name="pplaneNormals">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>130</y>
+            <width>121</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Use Existing Normals</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_23">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>110</y>
+            <width>421</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>This minimizer needs to have normals on the reference Point Cloud</string>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="pointToPlaneCov">
+        <widget class="QGroupBox" name="groupBox_22">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>10</y>
+           <width>561</width>
+           <height>211</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QLabel" name="label_20">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>30</y>
+            <width>421</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>This minimizer can limit the transformation</string>
+          </property>
+         </widget>
+         <widget class="QRadioButton" name="pplaneforce2DCov">
+          <property name="geometry">
+           <rect>
+            <x>240</x>
+            <y>50</y>
+            <width>141</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>2D (X,Y,Yaw)</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_10</string>
+          </attribute>
+         </widget>
+         <widget class="QRadioButton" name="pplaneforce4DOFCov">
+          <property name="geometry">
+           <rect>
+            <x>120</x>
+            <y>50</y>
+            <width>111</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>4DOF (x,y,z,yaw)</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_10</string>
+          </attribute>
+         </widget>
+         <widget class="QRadioButton" name="pplaneforce6DOF_2">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>50</y>
+            <width>91</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>6DOF (Normal)</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup_10</string>
+          </attribute>
+         </widget>
+         <widget class="QCheckBox" name="pplaneNormalsCov">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>180</y>
+            <width>121</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Use Existing Normals</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_31">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>160</y>
+            <width>421</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>This minimizer needs to have normals on the reference Point Cloud</string>
+          </property>
+         </widget>
+         <widget class="QDoubleSpinBox" name="pplaneStdDevCov">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>100</y>
+            <width>101</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string>0</string>
+          </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>1000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.010000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_32">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>80</y>
+            <width>421</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Standard Dev for Covariance</string>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="pointToPoint">
+        <widget class="QGroupBox" name="groupBox_23">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>10</y>
+           <width>561</width>
+           <height>71</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QLabel" name="medianDistOutlierTitle_2">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>30</y>
+            <width>246</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>No Options Needed</string>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="pointToPointCov">
+        <widget class="QGroupBox" name="groupBox_24">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>0</y>
+           <width>631</width>
+           <height>111</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QDoubleSpinBox" name="ppointStdDevCov">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>50</y>
+            <width>101</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="suffix">
+           <string>0</string>
+          </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>1000.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.010000000000000</double>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_33">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>30</y>
+            <width>421</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Standard Dev for Covariance</string>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="pointToSimilarity">
+        <widget class="QGroupBox" name="groupBox_25">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>10</y>
+           <width>631</width>
+           <height>131</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Options</string>
+         </property>
+         <widget class="QCheckBox" name="pSimilarityNormals">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>40</y>
+            <width>121</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Use Existing Normals</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="Checkers">
+      <attribute name="title">
+       <string>Checkers</string>
+      </attribute>
+      <widget class="QGroupBox" name="iterationChecker">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>50</y>
+         <width>161</width>
+         <height>61</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Iteration Checker</string>
+       </property>
+       <widget class="QDoubleSpinBox" name="iterationCheckerIter">
+        <property name="geometry">
+         <rect>
+          <x>70</x>
+          <y>30</y>
+          <width>71</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="suffix">
+         <string/>
+        </property>
+        <property name="decimals">
+         <number>0</number>
+        </property>
+        <property name="minimum">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>10000000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>40.000000000000000</double>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_24">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>51</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Iterations</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QCheckBox" name="enableIterationChecker">
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>30</y>
+         <width>141</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Use Iteration checker</string>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="enableDifferentialChecker">
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>120</y>
+         <width>181</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Use Differential checker</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QGroupBox" name="differentialChecker">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>140</y>
+         <width>641</width>
+         <height>121</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Differential Checker</string>
+       </property>
+       <widget class="QDoubleSpinBox" name="differentialCheckerRot">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>20</y>
+          <width>101</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="suffix">
+         <string> rad</string>
+        </property>
+        <property name="decimals">
+         <number>6</number>
+        </property>
+        <property name="minimum">
+         <double>0.000001000000000</double>
+        </property>
+        <property name="maximum">
+         <double>6.280000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.000100000000000</double>
+        </property>
+        <property name="stepType">
+         <enum>QAbstractSpinBox::DefaultStepType</enum>
+        </property>
+        <property name="value">
+         <double>0.001000000000000</double>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_25">
+        <property name="geometry">
+         <rect>
+          <x>130</x>
+          <y>20</y>
+          <width>421</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Threshold for rotation error (radian)</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_26">
+        <property name="geometry">
+         <rect>
+          <x>130</x>
+          <y>50</y>
+          <width>421</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Threshold for translation error (m)</string>
+        </property>
+       </widget>
+       <widget class="QDoubleSpinBox" name="differentialCheckerTrans">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>50</y>
+          <width>101</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="suffix">
+         <string> m</string>
+        </property>
+        <property name="decimals">
+         <number>6</number>
+        </property>
+        <property name="minimum">
+         <double>0.000001000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.000100000000000</double>
+        </property>
+        <property name="stepType">
+         <enum>QAbstractSpinBox::DefaultStepType</enum>
+        </property>
+        <property name="value">
+         <double>0.001000000000000</double>
+        </property>
+       </widget>
+       <widget class="QDoubleSpinBox" name="differentialCheckerIter">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>80</y>
+          <width>101</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="suffix">
+         <string/>
+        </property>
+        <property name="decimals">
+         <number>0</number>
+        </property>
+        <property name="minimum">
+         <double>0.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>10000000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>3.000000000000000</double>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_27">
+        <property name="geometry">
+         <rect>
+          <x>130</x>
+          <y>80</y>
+          <width>421</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Number of iterations over which to average the differencial error</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QCheckBox" name="enableMaxBoundChecker">
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>280</y>
+         <width>181</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Use Max Bound  checker</string>
+       </property>
+      </widget>
+      <widget class="QGroupBox" name="maxBoundChecker">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>300</y>
+         <width>641</width>
+         <height>80</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Max Bound Checker</string>
+       </property>
+       <widget class="QDoubleSpinBox" name="maxBoundCheckerRot">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>20</y>
+          <width>101</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="suffix">
+         <string> rad</string>
+        </property>
+        <property name="decimals">
+         <number>6</number>
+        </property>
+        <property name="minimum">
+         <double>0.000001000000000</double>
+        </property>
+        <property name="maximum">
+         <double>6.280000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.000100000000000</double>
+        </property>
+        <property name="stepType">
+         <enum>QAbstractSpinBox::DefaultStepType</enum>
+        </property>
+        <property name="value">
+         <double>1.000000000000000</double>
+        </property>
+       </widget>
+       <widget class="QDoubleSpinBox" name="maxBoundCheckerTrans">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>50</y>
+          <width>101</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="suffix">
+         <string> m</string>
+        </property>
+        <property name="decimals">
+         <number>6</number>
+        </property>
+        <property name="minimum">
+         <double>0.000001000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.000100000000000</double>
+        </property>
+        <property name="stepType">
+         <enum>QAbstractSpinBox::DefaultStepType</enum>
+        </property>
+        <property name="value">
+         <double>1.000000000000000</double>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_29">
+        <property name="geometry">
+         <rect>
+          <x>130</x>
+          <y>50</y>
+          <width>421</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Max translation (m)</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_28">
+        <property name="geometry">
+         <rect>
+          <x>130</x>
+          <y>20</y>
+          <width>421</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Max rotation (radian)</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QLabel" name="label_18">
+       <property name="geometry">
+        <rect>
+         <x>180</x>
+         <y>280</y>
+         <width>481</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>This checker stops the ICP loop with an exception when the transformation values exceed bounds.</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_21">
+       <property name="geometry">
+        <rect>
+         <x>190</x>
+         <y>120</y>
+         <width>421</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>This checker stops the ICP loop when the relative motions (i.e. abs(currentIter - lastIter)) of rotation and translation components are below a fix thresholds.</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_22">
+       <property name="geometry">
+        <rect>
+         <x>180</x>
+         <y>30</y>
+         <width>421</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>This checker stops the ICP loop after a certain number of iterations.</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="PointClouds">
+      <attribute name="title">
+       <string>PointClouds</string>
+      </attribute>
+      <widget class="QLineEdit" name="refCloudName">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>50</y>
+         <width>501</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="readCloudName">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>110</y>
+         <width>501</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_30">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>30</y>
+         <width>341</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Reference Cloud (The other cloud will be matched on this one)</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_34">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>90</y>
+         <width>341</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Read Cloud (The transformation will be applied on this cloud)</string>
+       </property>
+      </widget>
+      <widget class="QToolButton" name="swapCloudsButton">
+       <property name="geometry">
+        <rect>
+         <x>540</x>
+         <y>80</y>
+         <width>25</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>:/CC/plugin/qLibpointmatcher/images/iconSwap.png</normaloff>:/CC/plugin/qLibpointmatcher/images/iconSwap.png</iconset>
+       </property>
+      </widget>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_7">
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>filterTabWidget</tabstop>
+  <tabstop>buttonBox</tabstop>
+ </tabstops>
+ <resources>
+  <include location="../qLibpointmatcher.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>LibpointmatcherOutlierDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>358</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>LibpointmatcherOutlierDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>384</x>
+     <y>358</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>Options</sender>
+   <signal>currentChanged(int)</signal>
+   <receiver>filterType</receiver>
+   <slot>setCurrentIndex(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>392</x>
+     <y>240</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>409</x>
+     <y>72</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>filterType</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>Options</receiver>
+   <slot>setCurrentIndex(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>393</x>
+     <y>72</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>408</x>
+     <y>194</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>outlierType</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>stackedOutlier</receiver>
+   <slot>setCurrentIndex(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>401</x>
+     <y>73</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>385</x>
+     <y>255</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>minimizerType</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>stackedMinimizer</receiver>
+   <slot>setCurrentIndex(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>391</x>
+     <y>73</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>386</x>
+     <y>246</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <buttongroups>
+  <buttongroup name="buttonGroup_4"/>
+  <buttongroup name="buttonGroup_10"/>
+  <buttongroup name="buttonGroup_3"/>
+  <buttongroup name="buttonGroup"/>
+  <buttongroup name="buttonGroup_6"/>
+  <buttongroup name="buttonGroup_7"/>
+  <buttongroup name="buttonGroup_5"/>
+  <buttongroup name="buttonGroup_8"/>
+  <buttongroup name="buttonGroup_9"/>
+  <buttongroup name="buttonGroup_2"/>
+ </buttongroups>
+</ui>
