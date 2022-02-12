@@ -85,6 +85,9 @@ ccImageDrawer::ccImageDrawer(QWidget *parent) : QWidget(parent)
 , m_tf_rotate(0)
 , m_tf_scale()
 , m_tf_trans()
+, m_planeMode(true)
+, m_radio_plane("Plan")
+, m_radio_poly("Polyline")
 {
 	m_button_ok.setText("Create Plane");
 	m_button_ok.setParent(this);
@@ -115,6 +118,18 @@ ccImageDrawer::ccImageDrawer(QWidget *parent) : QWidget(parent)
 	connect(&m_button_addPolygon, &QPushButton::clicked, this, &ccImageDrawer::addPolygon);
 
 	m_button_clear.setText("Clear All");
+	m_button_clear.setParent(this);
+	m_button_clear.setCursor(Qt::ArrowCursor);
+	connect(&m_button_clear, &QPushButton::clicked, this, &ccImageDrawer::callbackClear);
+
+	m_radio_plane.setParent(this);
+	m_radio_plane.setCursor(Qt::ArrowCursor);
+	m_radio_plane.toggle();
+	//connect(&m_radio_plane, &QRadioButton::toggled, this, &ccImageDrawer::toggleMode);
+	m_radio_poly.setParent(this);
+	m_radio_poly.setCursor(Qt::ArrowCursor);
+	connect(&m_radio_poly, &QRadioButton::toggled, this, &ccImageDrawer::toggleMode);
+
 	m_button_clear.setParent(this);
 	m_button_clear.setCursor(Qt::ArrowCursor);
 	connect(&m_button_clear, &QPushButton::clicked, this, &ccImageDrawer::callbackClear);
@@ -181,6 +196,8 @@ ccImageDrawer::~ccImageDrawer()
 
 void ccImageDrawer::initLayout() {
 	QHBoxLayout *button_bar = new QHBoxLayout();
+	button_bar->addWidget(&m_radio_poly);
+	button_bar->addWidget(&m_radio_plane);
 	button_bar->addWidget(&m_button_expand);
 	button_bar->addWidget(&m_button_pause);
 	button_bar->addWidget(&m_button_cancel);
@@ -193,12 +210,14 @@ void ccImageDrawer::initLayout() {
 	button_bar->addWidget(&m_bright);
 	button_bar->setAlignment(Qt::AlignBottom | Qt::AlignRight);
 	this->setLayout(button_bar);
-	QMessageBox(QMessageBox::NoIcon, QString("Here"), QString("Init"));
 }
 void ccImageDrawer::disableAllWidget() 
 {
 
 	m_button_pause.setEnabled(false);
+	m_radio_plane.setEnabled(false);
+	m_radio_poly.setEnabled(false);
+
 	m_button_expand.setEnabled(false);
 	m_button_cancel.setEnabled(false);
 	m_button_addPolygon.setEnabled(false);
@@ -214,6 +233,8 @@ void ccImageDrawer::disableAllWidget()
 }
 void ccImageDrawer::enableAllWidget()
 {
+	m_radio_plane.setEnabled(true);
+	m_radio_poly.setEnabled(true);
 	m_button_pause.setEnabled(true);
 	m_button_expand.setEnabled(true);
 	m_button_cancel.setEnabled(false);
@@ -272,27 +293,73 @@ void ccImageDrawer::paintEvent(QPaintEvent *event) {
 	rotating.translate(-m_image.width() / 2, -m_image.height() / 2);
 
 	painter.setWorldTransform(rotating * m_tf_trans * m_tf_scale, true);
-	painter.drawPixmap(0, 0, m_image);
-	painter.setBrush(m_brush);
-	painter.setPen(m_pen);
-	painter.setOpacity(m_opacity);
-	painter.drawPolygon(m_polygon);
+	
+	if (m_planeMode)
+	{
+		painter.drawPixmap(0, 0, m_image);
+		m_brush.setColor(QColor(150, 0, 0));
+		m_brush.setStyle(Qt::SolidPattern);
+		m_pen.setColor(QColor(255, 0, 0));
+		m_pen.setWidth(2);
+		painter.setBrush(m_brush);
+		painter.setPen(m_pen);
+		painter.setOpacity(m_opacity);
+		painter.drawPolygon(m_polygon);
+	}
+	else
+	{
+		painter.drawPixmap(0, 0, m_image);
+
+		m_pen.setColor(QColor(255, 0, 0));
+		m_pen.setWidth(20);
+		painter.setBrush(m_brush);
+		painter.setPen(m_pen);
+		painter.setOpacity(1);
+		painter.drawPolyline(m_polygon);
+	}
+
 	painter.end();
 
 }
 
 // ************ Signals/Slots logic ************
-void ccImageDrawer::callbackOk() {
-	ccPointCloud* cloud = createNewPointCloudFromHighlighted();
-	if (cloud->size() < 10)
+void ccImageDrawer::toggleMode() {
+
+	if (m_radio_plane.isChecked())
 	{
-		ccLog::Error("Not engough points highlighted to create a proper plan");
-		return;
+		m_planeMode = true;
+		m_button_addPolygon.setEnabled(true);
+		m_button_ok.setText("Create Plane");
+		m_button_addPolygon.setText("Add Geology");
+		callbackClear();
+
 	}
-	createPlan(cloud);
-	callbackClear();
-	update();
-	emit actionOkDrawer();
+	else 
+	{
+		m_planeMode = false;
+		m_button_addPolygon.setEnabled(false);
+		m_button_ok.setText("N/A");
+		m_button_addPolygon.setText("Draw Polyline");
+		callbackClear();
+	}
+}
+
+void ccImageDrawer::callbackOk() {
+	if (m_planeMode)
+	{
+		ccPointCloud* cloud = createNewPointCloudFromHighlighted();
+		if (cloud->size() < 10)
+		{
+			ccLog::Error("Not engough points highlighted to create a proper plan");
+			return;
+		}
+		createPlan(cloud);
+		callbackClear();
+		update();
+		emit actionOkDrawer();
+
+	}
+
 }
 
 void ccImageDrawer::callbackPause() {
@@ -345,10 +412,9 @@ void ccImageDrawer::emitPaintEvent() {
 }
 
 void ccImageDrawer::addPolygon() {
-	if (m_polygon.size() >= 3)
+	if (m_polygon.size() >= 3  && m_planeMode)
 	{
-		
-		
+				
 		m_button_addPolygon.setEnabled(false);
 		
 		transformPolygonToGL();
@@ -368,6 +434,12 @@ void ccImageDrawer::addPolygon() {
 		m_polygon.clear();
 		update();
 		
+	}
+	if (!m_planeMode && m_polygon.size() > 1)
+	{
+		segmentToPoly(0.5);
+		callbackClear();
+		update();
 	}
 
 }
@@ -394,6 +466,8 @@ void ccImageDrawer::togglePause()
 		{
 			m_button_addPolygon.setEnabled(false);
 		}
+		m_radio_plane.setEnabled(true);
+		m_radio_poly.setEnabled(true);
 		//MainWindow::TheInstance()->ccGetStichedImageViewer()->enableAllWidget();
 	}
 	else
@@ -402,6 +476,8 @@ void ccImageDrawer::togglePause()
 		setCursor(Qt::CrossCursor);
 		m_button_pause.setText("Stop Drawing");
 		m_button_addPolygon.setEnabled(false);
+		m_radio_plane.setEnabled(false);
+		m_radio_poly.setEnabled(false);
 		//MainWindow::TheInstance()->ccGetStichedImageViewer()->disableAllWidget();
 	}
 
@@ -546,13 +622,6 @@ void ccImageDrawer::transformPolygonToGL()
 	{
 		return;
 	}
-	// Calculate the ratio between the image and the glWindow
-	QSize windowSize = glWindow->getScreenSize();
-	QSize imageSize = m_image.size();
-	float windowHeight = (float)windowSize.height();
-	float windowWidth = (float)windowSize.width();
-	float heightRatio = windowHeight / (float)imageSize.height();
-	float widthRatio = windowWidth / (float)imageSize.width();
 	// Transform QPolygon to 
 	m_polyVertices->clear();
 	m_segmentationPoly->clear();
@@ -576,25 +645,7 @@ void ccImageDrawer::transformPolygonToGL()
 		CCVector3d P3D(m_polyVertices->getPoint(i)->x, m_polyVertices->getPoint(i)->y, m_polyVertices->getPoint(i)->z);
 		ccLog::Print(QString("Segment Point x: %1px y: %2px z: %3").arg(P3D.x).arg(P3D.y).arg(P3D.z));
 	}
-	//
 
-	/*
-	ccLog::Error(QString("windowHeight : %1 windowWidth : %2 imageHeight : %3 imageWidth: %4 ")
-		.arg(QString::number(windowSize.height()))
-			.arg(QString::number(windowSize.width()))
-				.arg(QString::number(imageSize.height()))
-					.arg(QString::number(imageSize.width()))	
-	);
-
-	ccLog::Error(QString("ccGLConvertX : %1 ccGLConvertY : %2 ")
-		.arg(QString::number(m_polygon.point(0).x()*widthRatio))
-		.arg(QString::number(m_polygon.point(0).y()*heightRatio))
-	);
-	ccLog::Error(QString("ImagePositionx : %1 ImagePositiony : %2 ")
-		.arg(QString::number(m_polygon.point(0).x()*widthRatio))
-		.arg(QString::number(m_polygon.point(0).y()*heightRatio))
-	);
-	*/
 
 	if (m_polyVertices->size() <= 3) {
 		ccLog::Error("Your polyline has not engough points needs at least 4");
@@ -632,8 +683,290 @@ void ccImageDrawer::resetCloudVisibility()
 	glWindow->refresh();
 }
 
+void ccImageDrawer::generateSquarePolygonFromPoint(QPoint pt, float squareWidth)
+{
+	// topLeft
+	CCVector3 topLeft(pt.x() - squareWidth > 0 ? pt.x() - squareWidth : 0,
+		pt.y() - squareWidth > 0 ? pt.y() - squareWidth : 0,
+		0);
+	// topRight
+	CCVector3 topRight(pt.x() + squareWidth > (float)m_image.width() ? pt.x() + squareWidth : (float)m_image.width(),
+		pt.y() - squareWidth > 0 ? pt.y() - squareWidth : 0,
+		0);
+	// bottomRight
+	CCVector3 bottomRight(pt.x() + squareWidth > (float)m_image.width() ? pt.x() + squareWidth : (float)m_image.width(),
+		pt.y() + squareWidth > (float)m_image.height() ? pt.y() + squareWidth : (float)m_image.height(),
+		0);
+	// bottomLeft
+	CCVector3 bottomLeft(pt.x() - squareWidth > 0 ? pt.x() - squareWidth : 0,
+		pt.y() + squareWidth > (float)m_image.height() ? pt.y() + squareWidth : (float)m_image.height(),
+		0);
 
 
+
+	// creating polyline 
+	m_polyVertices->clear();
+	m_segmentationPoly->clear();
+
+	// Top left
+	m_polyVertices->addPoint(topLeft);
+	m_segmentationPoly->addPointIndex(0);
+	// Top right
+	m_polyVertices->addPoint(topRight);
+	m_segmentationPoly->addPointIndex(1);
+	// Bottom right
+	m_polyVertices->addPoint(bottomRight);
+	m_segmentationPoly->addPointIndex(2);
+	// BottomLeft
+	m_polyVertices->addPoint(bottomLeft);
+	m_segmentationPoly->addPointIndex(3);
+	// Top left closing
+	m_polyVertices->addPoint(topLeft);
+	m_segmentationPoly->addPointIndex(0);
+	// Closing Polyline 
+	m_segmentationPoly->setClosed(true);
+
+	return;
+}
+
+std::vector<CCVector2> ccImageDrawer::smoothPolygonLine( float pxPrecision)
+{
+	std::vector<CCVector2> smoothPoints;
+	if (m_polygon.size() < 2) { return smoothPoints; }
+	
+
+	for (int i = 0; i + 1 < m_polygon.size(); i++)
+	{
+		QPoint pt1 = m_polygon[i];
+		QPoint pt2 = m_polygon[i+1];
+		QPoint delta = pt2 - pt1; 
+		ccLog::Print(QString("pt1(%1, %2) pt2(%3, %4) delta(%5, %6)").arg(pt1.x()).arg(pt1.y()).arg(pt2.x()).arg(pt2.y()).arg(delta.x()).arg(delta.y()));
+		float a = (float)delta.y() / (float)delta.x();
+		float xSteps = sqrt(pow(pxPrecision, 2) / (1 + pow(a, 2)));
+		ccLog::Print(QString("xSteps: %1 a: %2").arg(xSteps).arg(a));
+		float accumulatedX = xSteps;
+		CCVector2 ptToAdd;
+
+		// add first point 
+		smoothPoints.push_back(CCVector2((float)pt1.x(),(float)pt1.y()));
+
+		while (accumulatedX < (float)delta.x())
+		{
+			ptToAdd = CCVector2(accumulatedX + (float)pt1.x(), accumulatedX*a + (float)pt1.y());
+			smoothPoints.push_back(ptToAdd);
+			accumulatedX += xSteps;
+		}
+	}
+	// add last point 
+	smoothPoints.push_back(CCVector2((float)m_polygon.back().x(), (float)m_polygon.back().y()));
+	
+	for (int i = 0; i < smoothPoints.size(); i++)
+	{
+		ccLog::Print(QString("Pt smoothed are (%1, %2,)").arg(smoothPoints[i][0]).arg(smoothPoints[i][1]));
+	}
+	return smoothPoints;
+}
+
+
+void ccImageDrawer::segmentToPoly(float degPrecision)
+{
+	// Get the point cloud of the biggest rectangle based on the polyline
+	ccGLWindow* glWindow = MainWindow::GetActiveGLWindow();
+	ccPointCloud* pointCloud = MainWindow::TheInstance()->ccGetStichedImageViewer()->getCurrentPointCloud();
+	std::vector<double> transform = m_viewParameters;
+	double maxDist = m_zFar;
+	float pxPrecision = degPrecision / 360 * m_image.width();
+
+	std::vector<CCVector3> finalPolylinePoints;
+
+	ccGLMatrixd poseMat;
+	CCCoreLib::SquareMatrixd rotMat(3);
+	double quaternion[4];
+	quaternion[0] = transform[3];
+	quaternion[1] = transform[4];
+	quaternion[2] = transform[5];
+	quaternion[3] = transform[6];
+	rotMat.initFromQuaternion(quaternion);
+	rotMat.toGlMatrix(poseMat.data());
+	poseMat.getTranslation()[0] = transform[0];
+	poseMat.getTranslation()[1] = transform[1];
+	poseMat.getTranslation()[2] = transform[2];
+	// Inverting mat for points
+	poseMat.invert();
+
+	if (!glWindow || !pointCloud)
+	{
+		return;
+	}
+
+	m_pointCloudIsHidden = !pointCloud->isEnabled();
+	if (m_pointCloudIsHidden)
+	{
+		pointCloud->setEnabled(true);
+	}
+
+	if (!m_polygon.size() > 2)
+	{
+		ccLog::Error("No polyline defined!");
+		return;
+	}
+
+	ccGenericPointCloud* cloud = ccHObjectCaster::ToGenericPointCloud(pointCloud);
+	if (!cloud) { return; };
+
+	int cloudSize = static_cast<int>(cloud->size());
+	//we project each point and we check if it falls inside the segmentation polyline
+	bool atLeast1point = false;
+
+	// We create a temporary pair of xyz and uvz in order accelerate speed (act as the points kept in the whole cloud)
+	std::vector<std::pair<CCVector3d, CCVector3d>> tempCloud;
+
+	// we create the segmentation polyline  (the big big retangle)
+
+	// Get min and max
+	float maxX = 0;
+	float maxY = 0;
+	float minX = m_image.width();
+	float minY = m_image.height();
+
+	for (int i = 0; i < m_polygon.count(); i++)
+	{
+
+		if (m_polygon.point(i).x() > maxX)
+		{
+			maxX = m_polygon.point(i).x();
+		}
+		if (m_polygon.point(i).y() > maxY)
+		{
+			maxY = m_polygon.point(i).y();
+		}
+		if (m_polygon.point(i).x() < minX)
+		{
+			minX = m_polygon.point(i).x();
+		}
+		if (m_polygon.point(i).y() < minY)
+		{
+			minY = m_polygon.point(i).y();
+		}
+	}
+	maxX = maxX + pxPrecision > (float)m_image.width() ? (float)m_image.width() : maxX + pxPrecision;
+	maxY = maxY + pxPrecision > (float)m_image.height() ? (float)m_image.height() : maxY + pxPrecision;
+	minX = minX - pxPrecision < 0 ? 0 : minX - pxPrecision;
+	minY = minY - pxPrecision < 0 ? 0 : minY - pxPrecision;
+
+	m_polyVertices->clear();
+	m_segmentationPoly->clear();
+
+	// Top left
+	m_polyVertices->addPoint(CCVector3(minX, minY, 0));
+	m_segmentationPoly->addPointIndex(0);
+	// Top right
+	m_polyVertices->addPoint(CCVector3(maxX, minY, 0));
+	m_segmentationPoly->addPointIndex(1);
+	// Bottom right
+	m_polyVertices->addPoint(CCVector3(maxX, maxY, 0));
+	m_segmentationPoly->addPointIndex(2);
+	// BottomLeft
+	m_polyVertices->addPoint(CCVector3(minX, maxY, 0));
+	m_segmentationPoly->addPointIndex(3);
+	// Top left closing
+	m_polyVertices->addPoint(CCVector3(minX, minY, 0));
+	m_segmentationPoly->addPointIndex(0);
+	// Closing Polyline 
+	m_segmentationPoly->setClosed(true);
+
+	
+
+	for (int i = 0; i < cloudSize; ++i)
+	{
+		CCVector3d P3D(cloud->getPoint(i)->x, cloud->getPoint(i)->y, cloud->getPoint(i)->z);
+
+		CCVector3d Q2D;
+		projectSpherical(P3D, Q2D, poseMat);
+		bool pointInside = false;
+
+		if (Q2D.z <= maxDist)
+		{
+			CCVector2 P2D(static_cast<PointCoordinateType>(Q2D.x),
+				static_cast<PointCoordinateType>(Q2D.y));
+
+			pointInside = CCCoreLib::ManualSegmentationTools::isPointInsidePoly(P2D, m_segmentationPoly);
+
+		}
+		if (pointInside)
+		{
+			atLeast1point = true;
+			// add to temp point cloud
+			tempCloud.push_back(std::make_pair(P3D, Q2D));
+		}
+	}
+	//ccLog::Error(QString("Temp cloud size :%1").arg(tempCloud.size()));
+
+	// generate smoother polygon line
+	std::vector<CCVector2> ptList = smoothPolygonLine(pxPrecision);
+
+	// now that we have our smaller cloud we can process to calculate points of the polyline
+	ccPointCloud* finalVertices = new ccPointCloud("vertices", static_cast<unsigned>(ReservedIDs::INTERACTIVE_SEGMENTATION_TOOL_POLYLINE_VERTICES));
+	ccPolyline* finalPolyline = new ccPolyline(finalVertices, static_cast<unsigned>(ReservedIDs::INTERACTIVE_SEGMENTATION_TOOL_POLYLINE));
+	finalPolyline->setColor(ccColor::Rgb(255, 0, 0));
+	finalPolyline->setWidth(5);
+	int polylineId = 0;
+
+	for (int j = 0; j < ptList.size(); j++)
+	{
+		float u = ptList[j][0];
+		float v = ptList[j][1];
+		int ptsFound = 0;
+		CCVector3d P3D(0, 0, 0);
+		float xSum = 0;
+		float ySum = 0;
+		float zSum = 0;
+		for (int i = 0; i < tempCloud.size(); ++i)
+		{
+			// Findind points
+			CCVector3d P2D = tempCloud[i].second;
+			float ptDistance = sqrt(pow(u - P2D[0], 2) + pow(v - P2D[1], 2));
+			if (ptDistance < pxPrecision)
+			{
+				P3D += tempCloud[i].first;
+				ptsFound++;
+			}
+		}
+
+		if (ptsFound > 1)
+		{
+			// Averaging result
+			P3D /= ptsFound;
+			ccLog::Print(QString("Points found added to polyline pt:%1").arg(polylineId));
+			// New polyline
+			finalVertices->addPoint(CCVector3(P3D.x,P3D.y,P3D.z));
+			finalPolyline->addPointIndex(polylineId);
+			polylineId++;
+		}
+
+		if (ptsFound <= 1)
+		{
+			ccLog::Warning(QString("No 3D Points found at pt:%1, not adding to polyline").arg(polylineId));
+		}
+	}
+	if (m_pointCloudIsHidden)
+	{
+		pointCloud->setEnabled(false);
+	}
+
+
+	//Adding polyline to file
+	ccHObject* finalObject = static_cast<ccHObject*>(finalPolyline);
+	finalObject->setEnabled(true);
+	MainWindow::TheInstance()->addToDB(finalObject);
+
+	glWindow->redraw();
+	glWindow->refresh();
+
+
+	return;
+
+}
 
 bool ccImageDrawer::segmentSpherical(bool keepPointsInside)
 {
@@ -736,7 +1069,7 @@ bool ccImageDrawer::segmentSpherical(bool keepPointsInside)
 	{
 		pointCloud->setEnabled(false);
 	}
-	glWindow->redraw(false, false);
+	glWindow->redraw();
 	glWindow->refresh();
 
 

@@ -21,6 +21,7 @@
 #include <QtGlobal>
 #include <QWidget>
 #include <QPushButton>
+#include <QRadioButton>
 #include <QTimer>
 #include <QPainter>
 #include <QHBoxLayout>
@@ -49,10 +50,14 @@ private:
 	QSpinBox m_counter;
 	QSpinBox m_far;
 
+	QRadioButton m_radio_plane;
+	QRadioButton m_radio_poly;
+
 	QPixmap m_image;
 	QPixmap m_image_backup;
 	QColor m_brush_color;
 	QPolygon m_polygon;
+	
 
 	ccPointCloud* m_polyVertices;
 	ccPolyline*	m_segmentationPoly;
@@ -70,6 +75,7 @@ private:
 	QSpinBox m_bright;
 	QSpinBox m_contrast;
 	int m_nodeId;
+	bool m_planeMode;
 
 	// Stop or start drawing 	
 	bool m_paused = true;
@@ -143,7 +149,12 @@ public:
 
 	// Project spherical
 	void projectSpherical(CCVector3d P3D, CCVector3d &Q2D, ccGLMatrixd poseMat);
-
+	// creates a small square for polyline search
+	void ccImageDrawer::generateSquarePolygonFromPoint(QPoint pt, float squareWidth);
+	// creates a list of points for the polyline with precision in degrees
+	void ccImageDrawer::segmentToPoly(float degPrecision);
+	// smooth the polygon line, precision is in px
+	std::vector<CCVector2> ccImageDrawer::smoothPolygonLine(float pxPrecision);
 
 protected:
 	void mouseMoveEvent(QMouseEvent *event);
@@ -166,6 +177,7 @@ signals:
 	void actionOkDrawer();
 
 public slots:
+	void toggleMode(void);
 	void callbackClear(void);
 	void callbackPause(void);
 	void callbackOk(void);

@@ -183,20 +183,7 @@ private:
 
 	std::vector<double> m_currentTransform{ 0,0,0,1,0,0,0 };
 
-	//Set Currrent Camera Node Center Position
-	void setCameraCenterNodePosition();
 
-	// initiat camera
-	void reinitiateCamera();
-
-	//Change the camera relative to the Node Position Change
-	void setCameraNodePosition(CCVector3d newPos);
-	// Set camera orientation and viewField, will automatically reposition to the current_node
-	void setCameraOrientation();
-	//returns the normalized orientation vector for the current Node based on the trajectory
-	void nodeOrientationVector(int);
-	//returns the normalized orientation vector for the current Node based on the quaternions
-	bool quaternionOrientationVector(int);
 	
 	//change the view orientation of the following cam
 	void changeCamView(CC_VIEW_ORIENTATION);
