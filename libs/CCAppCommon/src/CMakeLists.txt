@@ -9,4 +9,5 @@ target_sources( ${PROJECT_NAME}
 		${CMAKE_CURRENT_LIST_DIR}/ccPluginManager.cpp
 		${CMAKE_CURRENT_LIST_DIR}/ccStereoModeDlg.cpp
 		${CMAKE_CURRENT_LIST_DIR}/ccTranslationManager.cpp
+		${CMAKE_CURRENT_LIST_DIR}/qHPR.cpp
 )

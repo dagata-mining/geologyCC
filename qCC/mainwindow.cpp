@@ -6571,6 +6571,8 @@ void MainWindow::deactivateSegmentationMode(bool state)
 				bool deleteOriginalEntity = deleteHiddenParts;
 				if (entity->isKindOf(CC_TYPES::POINT_CLOUD))
 				{
+					ccPointCloud* pCloud = ccHObjectCaster::ToPointCloud(entity);
+					ccPointCloud* tCloud = pCloud->getTrajectoryCloud();
 					ccGenericPointCloud* genCloud = ccHObjectCaster::ToGenericPointCloud(entity);
 					ccGenericPointCloud* segmentedCloud = genCloud->createNewCloudFromVisibilitySelection(!deleteHiddenParts);
 					if (segmentedCloud && segmentedCloud->size() == 0)
@@ -6581,8 +6583,14 @@ void MainWindow::deactivateSegmentationMode(bool state)
 					else
 					{
 						segmentationResult = segmentedCloud;
+						ccPointCloud* sCloud = ccHObjectCaster::ToPointCloud(segmentationResult);
+						if (tCloud)
+						{
+							sCloud->setTrajectoryCloud(tCloud);
+							sCloud->setImagePointCloud(true);
+						}
 					}
-
+					
 					deleteOriginalEntity |= (genCloud->size() == 0);
 				}
 				else if (entity->isKindOf(CC_TYPES::MESH)/*|| entity->isA(CC_TYPES::PRIMITIVE)*/) //TODO

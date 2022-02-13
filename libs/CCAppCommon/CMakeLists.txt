@@ -6,6 +6,7 @@ add_subdirectory( devices )
 add_subdirectory( include )
 add_subdirectory( src )
 add_subdirectory( ui )
+add_subdirectory( extern/qhull)
 
 target_link_libraries( ${PROJECT_NAME}
 	CCPluginAPI
@@ -30,7 +31,7 @@ if( OPTION_SUPPORT_GAMEPADS )
 	target_link_libraries( ${PROJECT_NAME} Qt5::Gamepad )
 endif()
 
-
+target_link_libraries( ${PROJECT_NAME} qhull)
 
 if( OPTION_SUPPORT_3DCONNEXION_DEVICES )
 	target_link_3DXWARE( ${PROJECT_NAME} )

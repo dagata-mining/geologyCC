@@ -31,9 +31,7 @@
 class qHPR : public QObject, public ccStdPluginInterface
 {
 	Q_OBJECT
-	Q_INTERFACES( ccPluginInterface ccStdPluginInterface )
 
-	Q_PLUGIN_METADATA( IID "cccorp.cloudcompare.plugin.qHPR" FILE "../info.json" )
 
 public:
 

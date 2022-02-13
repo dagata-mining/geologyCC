@@ -34,7 +34,17 @@
 #include <ccImage.h>
 #include <DgmOctreeReferenceCloud.h>
 #include <DgmOctree.h>
+#include <ccOctree.h>
+#include <ccOctreeProxy.h>
+#include <ccProgressDialog.h>
 
+#include <CloudSamplingTools.h>
+
+enum DRAW_TYPE {
+	DRAW_PLANE,	/**< Plane **/
+	DRAW_POLYLINE,	/**< Polyline **/
+	DRAW_SECTION,	/**< Cross section**/
+};
 
 class ccImageDrawer : public QWidget
 {
@@ -52,6 +62,8 @@ private:
 
 	QRadioButton m_radio_plane;
 	QRadioButton m_radio_poly;
+	QRadioButton m_radio_cross;
+	DRAW_TYPE m_draw_type;
 
 	QPixmap m_image;
 	QPixmap m_image_backup;
@@ -75,7 +87,7 @@ private:
 	QSpinBox m_bright;
 	QSpinBox m_contrast;
 	int m_nodeId;
-	bool m_planeMode;
+	
 
 	// Stop or start drawing 	
 	bool m_paused = true;
@@ -151,10 +163,19 @@ public:
 	void projectSpherical(CCVector3d P3D, CCVector3d &Q2D, ccGLMatrixd poseMat);
 	// creates a small square for polyline search
 	void ccImageDrawer::generateSquarePolygonFromPoint(QPoint pt, float squareWidth);
+	
 	// creates a list of points for the polyline with precision in degrees
 	void ccImageDrawer::segmentToPoly(float degPrecision);
+	
+	// Create section polylines 
+	void ccImageDrawer::sectionToPoly(float degPrecision);
+
+	
 	// smooth the polygon line, precision is in px
 	std::vector<CCVector2> ccImageDrawer::smoothPolygonLine(float pxPrecision);
+
+	CCCoreLib::ReferenceCloud* removeHiddenPoints(CCCoreLib::GenericIndexedCloudPersist * theCloud, CCVector3d viewPoint, double fParam);
+	ccPointCloud* doAction(ccPointCloud* cloud, CCVector3d viewPoint);
 
 protected:
 	void mouseMoveEvent(QMouseEvent *event);

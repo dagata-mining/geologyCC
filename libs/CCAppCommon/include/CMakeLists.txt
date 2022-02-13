@@ -10,6 +10,7 @@ target_sources( ${PROJECT_NAME}
 		${CMAKE_CURRENT_LIST_DIR}/ccPluginManager.h
 		${CMAKE_CURRENT_LIST_DIR}/ccStereoModeDlg.h
 		${CMAKE_CURRENT_LIST_DIR}/ccTranslationManager.h
+		${CMAKE_CURRENT_LIST_DIR}/qHPR.h
 )
 
 target_include_directories( ${PROJECT_NAME}
