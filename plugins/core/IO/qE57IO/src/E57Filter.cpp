@@ -39,6 +39,7 @@
 #include <QBuffer>
 #include <QUuid>
 #include <QMessageBox>
+#include <Qquaternion.h>
 
 //system
 #include <cassert>
@@ -2975,9 +2976,20 @@ CC_FILE_ERROR E57Filter::loadFile(const QString& filename, ccHObject& container,
 
 					for (int i = 0; i < posesImages.size(); i++)
 					{
+						 
+
 						ccHObject* image = posesImages[i].first;
 						std::vector<double> t = posesImages[i].second;
+						
+						
+						
+						QQuaternion correction = QQuaternion::fromEulerAngles(0, 0, 0);
+						QQuaternion current(t[3], t[4], t[5], t[6]);
+						
+						//current = current * correction;
+						ccLog::Print(QString("(%1,%2,%3,%4)").arg(current.scalar()).arg(current.x()).arg(current.y()).arg(current.z()));
 						// x,y,z,qw,qx,qy,qz
+
 
 						CCVector3 p;
 						p.x = t[0];
@@ -2985,10 +2997,15 @@ CC_FILE_ERROR E57Filter::loadFile(const QString& filename, ccHObject& container,
 						p.z = t[2];
 						cloudTrajectory->addPoint(p);
 						// adding scalar fields
-						qw->push_back(t[3]);
-						qx->push_back(t[4]);
-						qy->push_back(t[5]);
-						qz->push_back(t[6]);
+						qw->push_back(current.scalar());
+						qx->push_back(current.x());
+						qy->push_back(current.y());
+						qz->push_back(current.z());
+
+						//qw->push_back(t[3]);
+						//qx->push_back(t[4]);
+						//qy->push_back(t[5]);
+						//qz->push_back(t[6]);
 						imageId->push_back(image->getUniqueID());
 					}
 

@@ -81,6 +81,7 @@ ccImageDrawer::ccImageDrawer(QWidget *parent) : QWidget(parent)
 , m_paused(false)
 , m_polyVertices(nullptr)
 , m_segmentationPoly(nullptr)
+, m_polylineObject(nullptr)
 , m_locked(false)
 , m_pointCloudIsHidden(false)
 , m_parent(parent)
@@ -161,6 +162,16 @@ ccImageDrawer::ccImageDrawer(QWidget *parent) : QWidget(parent)
 	m_far.setMaximumWidth(100);
 	m_far.setCursor(Qt::ArrowCursor);
 
+	m_precision.setValue(0.5);
+	m_precision.setMaximum(5.0);
+	m_precision.setMinimum(0.1);
+	m_precision.setPrefix("Precision:");
+	m_precision.setSuffix("°");
+	m_precision.setMaximumWidth(100);
+	m_precision.setDecimals(2);
+	m_precision.setSingleStep(0.1);
+	m_precision.setCursor(Qt::ArrowCursor);
+
 	m_bright.setValue(0);
 	m_bright.setMaximum(255);
 	m_bright.setMinimum(-255);
@@ -194,7 +205,7 @@ ccImageDrawer::ccImageDrawer(QWidget *parent) : QWidget(parent)
 
 	m_polyVertices = new ccPointCloud("vertices", static_cast<unsigned>(ReservedIDs::INTERACTIVE_SEGMENTATION_TOOL_POLYLINE_VERTICES));
 	m_segmentationPoly = new ccPolyline(m_polyVertices, static_cast<unsigned>(ReservedIDs::INTERACTIVE_SEGMENTATION_TOOL_POLYLINE));
-
+	
 }
 
 ccImageDrawer::~ccImageDrawer()
@@ -213,6 +224,7 @@ void ccImageDrawer::initLayout() {
 	button_bar->addWidget(&m_radio_poly);
 	button_bar->addWidget(&m_radio_plane);
 	button_bar->addWidget(&m_radio_cross);
+	button_bar->addWidget(&m_precision);
 	button_bar->addWidget(&m_button_expand);
 	button_bar->addWidget(&m_button_pause);
 	button_bar->addWidget(&m_button_cancel);
@@ -233,7 +245,7 @@ void ccImageDrawer::disableAllWidget()
 	m_radio_plane.setEnabled(false);
 	m_radio_poly.setEnabled(false);
 	m_radio_cross.setEnabled(false);
-
+	m_precision.setEnabled(false);
 	m_button_expand.setEnabled(false);
 	m_button_cancel.setEnabled(false);
 	m_button_addPolygon.setEnabled(false);
@@ -252,6 +264,7 @@ void ccImageDrawer::enableAllWidget()
 	m_radio_plane.setEnabled(true);
 	m_radio_poly.setEnabled(true);
 	m_radio_cross.setEnabled(true);
+	m_precision.setEnabled(true);
 	m_button_pause.setEnabled(true);
 	m_button_expand.setEnabled(true);
 	m_button_cancel.setEnabled(false);
@@ -265,6 +278,12 @@ void ccImageDrawer::enableAllWidget()
 	m_contrast.setEnabled(true);
 	return;
 	
+}
+void ccImageDrawer::initPolyObject() {
+	ccPointCloud* pc = new ccPointCloud("vertices", static_cast<unsigned>(ReservedIDs::INTERACTIVE_SEGMENTATION_TOOL_POLYLINE_VERTICES));
+	m_polylineObject = new ccPolyline(pc, static_cast<unsigned>(ReservedIDs::INTERACTIVE_SEGMENTATION_TOOL_POLYLINE));
+	m_polylineObject->setName("Dxf Files");
+	MainWindow::TheInstance()->addToDB(m_polylineObject);
 }
 
 bool ccImageDrawer::setImage(QPixmap &image) {
@@ -485,13 +504,13 @@ void ccImageDrawer::addPolygon() {
 	}
 	if (m_draw_type == DRAW_POLYLINE && m_polygon.size() > 1)
 	{
-		segmentToPoly(0.5);
+		segmentToPoly(m_precision.value());
 		callbackClear();
 		update();
 	}
 	if (m_draw_type == DRAW_SECTION && m_polygon.size() == 1)
 	{
-		sectionToPoly(0.5);
+		sectionToPoly(m_precision.value());
 		callbackClear();
 		update();
 	}
@@ -1041,9 +1060,17 @@ void ccImageDrawer::sectionToPoly(float degPrecision)
 
 
 	//Adding polyline to file
-	ccHObject* finalObject = static_cast<ccHObject*>(finalPolyline);
-	finalObject->setEnabled(true);
-	MainWindow::TheInstance()->addToDB(finalObject);
+	//ccHObject* finalObject = static_cast<ccHObject*>(finalPolyline);
+	finalPolyline->setEnabled(true);
+	finalPolyline->setName("Cross-section");
+	//finalPolyline->addChild(finalVertices);
+	if (!m_polylineObject)
+	{
+		initPolyObject();
+	}
+	//MainWindow::TheInstance()->addToDB(finalPolyline);
+	m_polylineObject->addChild(finalPolyline);
+	MainWindow::TheInstance()->addToDB(finalPolyline);
 
 	glWindow->redraw();
 	glWindow->refresh();
@@ -1256,9 +1283,17 @@ void ccImageDrawer::segmentToPoly(float degPrecision)
 
 
 	//Adding polyline to file
-	ccHObject* finalObject = static_cast<ccHObject*>(finalPolyline);
-	finalObject->setEnabled(true);
-	MainWindow::TheInstance()->addToDB(finalObject);
+	//ccHObject* finalObject = static_cast<ccHObject*>(finalPolyline);
+	finalPolyline->setEnabled(true);
+	finalPolyline->setName("Polyline");
+	if (!m_polylineObject)
+	{
+		initPolyObject();
+	}
+	m_polylineObject->addChild(finalPolyline);
+	MainWindow::TheInstance()->addToDB(finalPolyline);
+	
+	
 
 	glWindow->redraw();
 	glWindow->refresh();
@@ -1882,3 +1917,5 @@ CCCoreLib::ReferenceCloud * ccImageDrawer::removeHiddenPoints(CCCoreLib::Generic
 	}
 	return nullptr;
 }
+
+

@@ -59,6 +59,7 @@ private:
 
 	QSpinBox m_counter;
 	QSpinBox m_far;
+	QDoubleSpinBox m_precision;
 
 	QRadioButton m_radio_plane;
 	QRadioButton m_radio_poly;
@@ -70,7 +71,7 @@ private:
 	QColor m_brush_color;
 	QPolygon m_polygon;
 	
-
+	ccPolyline* m_polylineObject;
 	ccPointCloud* m_polyVertices;
 	ccPolyline*	m_segmentationPoly;
 
@@ -95,6 +96,7 @@ private:
 	// Polygon List
 	std::vector<QPolygon> m_polygonList;
 
+	void initPolyObject();
 	void initLayout(void);
 	//QPoint imageToScreen(QPoint & point);
 	//QPoint screenToImage(QPoint & point)
@@ -162,20 +164,23 @@ public:
 	// Project spherical
 	void projectSpherical(CCVector3d P3D, CCVector3d &Q2D, ccGLMatrixd poseMat);
 	// creates a small square for polyline search
-	void ccImageDrawer::generateSquarePolygonFromPoint(QPoint pt, float squareWidth);
+	void generateSquarePolygonFromPoint(QPoint pt, float squareWidth);
 	
 	// creates a list of points for the polyline with precision in degrees
-	void ccImageDrawer::segmentToPoly(float degPrecision);
+	void segmentToPoly(float degPrecision);
 	
 	// Create section polylines 
-	void ccImageDrawer::sectionToPoly(float degPrecision);
+	void sectionToPoly(float degPrecision);
 
 	
 	// smooth the polygon line, precision is in px
 	std::vector<CCVector2> ccImageDrawer::smoothPolygonLine(float pxPrecision);
 
+
 	CCCoreLib::ReferenceCloud* removeHiddenPoints(CCCoreLib::GenericIndexedCloudPersist * theCloud, CCVector3d viewPoint, double fParam);
 	ccPointCloud* doAction(ccPointCloud* cloud, CCVector3d viewPoint);
+
+
 
 protected:
 	void mouseMoveEvent(QMouseEvent *event);

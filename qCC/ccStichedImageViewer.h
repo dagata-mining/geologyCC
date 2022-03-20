@@ -139,6 +139,10 @@ private:
 	ccPointCloud* m_currentPointCloud;
 	// Current trajectory address
 	ccPointCloud* m_currentTrajectory;
+
+	// Unrolled Cloud
+	ccPointCloud* m_unrolledCloud;
+
 	// Current viewport
 	ccViewportParameters* m_viewport;
 
@@ -204,6 +208,9 @@ private:
 	// Get closest point id
 	int closestPoseToPoint(const CCVector3* pt);
 	void chooseImageAction();
+	
+	// unroll point cloud
+	void unrollPointCloud(float radius, CCVector3 centerPt);
 
 };
 

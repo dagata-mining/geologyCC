@@ -3799,6 +3799,7 @@ ccPointCloud* ccPointCloud::unroll(	UnrollMode mode,
 	
 	double startAngle_rad = CCCoreLib::DegreesToRadians( startAngle_deg );
 	double stopAngle_rad = CCCoreLib::DegreesToRadians( stopAngle_deg );
+	float circumference = params->radius * 2 * M_PI;
 
 	PointCoordinateType alpha_rad = 0;
 	PointCoordinateType sin_alpha = 0;
@@ -3818,18 +3819,23 @@ ccPointCloud* ccPointCloud::unroll(	UnrollMode mode,
 		PointCoordinateType longitude_rad = 0; //longitude (rad)
 		PointCoordinateType delta = 0; //distance to the cone/cylinder surface
 		PointCoordinateType coneAbscissa = 0;
+		
 
 		switch (mode)
 		{
 		case CYLINDER:
 		{
 			AP = *Pin - cylParams->center;
-			ProjectOnCylinder(AP, dim, params->radius, delta, longitude_rad);
-
+			//ProjectOnCylinder(AP, dim, params->radius, delta, longitude_rad);
+			float depth = sqrt(AP.x * AP.x + AP.y *AP.y);
+			float angle = -atan2(AP.x, AP.y);
+			float xCylinder = (angle / M_PI_2) * (circumference / 2);
 			//we project the point
 			//Pout.u[dim.x] = longitude_rad * radius;
-			Pout.u[dim.y] = -delta;
-			Pout.u[dim.z] = Pin->u[dim.z];
+			Pout.x = xCylinder;
+			Pout.y = AP.z;
+			Pout.z = depth;
+
 		}
 		break;
 
@@ -3953,18 +3959,7 @@ ccPointCloud* ccPointCloud::unroll(	UnrollMode mode,
 			deviationValues[i] = static_cast<ScalarType>(delta);
 		}
 
-		//then repeat the unrolling process for the coordinates
-		//1) position the 'point' at the beginning of the angular range
-		double dLongitude_rad = longitude_rad;
-		while (dLongitude_rad >= startAngle_rad)
-		{
-			dLongitude_rad -= 2 * M_PI;
-		}
-		dLongitude_rad += 2 * M_PI;
 
-		//2) repeat the unrolling process
-		for (; dLongitude_rad < stopAngle_rad; dLongitude_rad += 2 * M_PI)
-		{
 			//do we need to reserve more memory?
 			if (duplicatedPoints.size() == duplicatedPoints.capacity())
 			{
@@ -3986,30 +3981,9 @@ ccPointCloud* ccPointCloud::unroll(	UnrollMode mode,
 				}
 			}
 
-			//add the point
-			switch (mode)
-			{
-			case CYLINDER:
-			case STRAIGHTENED_CONE:
-				Pout.u[dim.x] = dLongitude_rad * params->radius;
-				break;
-			case STRAIGHTENED_CONE2:
-				Pout.u[dim.x] = dLongitude_rad * coneAbscissa * sin_alpha;
-				break;
-
-			case CONE:
-				Pout.u[dim.x] =  coneAbscissa * sin(dLongitude_rad);
-				Pout.u[dim.y] = -coneAbscissa * cos(dLongitude_rad);
-				//Pout = coneParams->apex + Pout; //nope, this projection is arbitrary and should be centered on (0, 0, 0)
-				break;
-
-			default:
-				assert(false);
-			}
-
 			unrolledPoints.push_back(Pout);
 			duplicatedPoints.addPointIndex(i);
-		}
+		
 
 		//process canceled by user?
 		if (progressCb && !nprogress.oneStep())

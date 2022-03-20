@@ -71,6 +71,7 @@ ccStichedImageViewer::ccStichedImageViewer(QWidget* parent = nullptr, ccPickingH
 	, m_currentPicking(false)
 	, m_currentPointCloud(nullptr)
 	, m_currentTrajectory(nullptr)
+	, m_unrolledCloud(nullptr)
 	, m_viewport(nullptr)
 	, m_currentCameraNodeOrientation(1, 0, 0)
 	, m_currentCameraNodeUpOrientation(0, 0, 1)
@@ -781,6 +782,7 @@ void ccStichedImageViewer::changeCamView(CC_VIEW_ORIENTATION orientation)
 	{
 	case CC_FRONT_VIEW:
 	{
+		unrollPointCloud(2.5,CCVector3(0,0,0));
 		m_shiftVector = { 0, -1, 0 };
 		m_up = { 0,0,1 };
 		m_forward = { 0,1,0 };
@@ -859,6 +861,18 @@ void ccStichedImageViewer::setCameraNodePosition()
 	//setCameraOrientation();
 
 }
+
+void ccStichedImageViewer::unrollPointCloud(float radius, CCVector3 centerPt)
+{
+	
+	ccPointCloud::UnrollCylinderParams params;
+	params.axisDim = 2;
+	params.center = centerPt;
+	params.radius = radius;
+	m_unrolledCloud = m_currentPointCloud->unroll(ccPointCloud::UnrollMode::CYLINDER, &params, false, 0, 360);
+	//ccHObject* imagesFolder = new ccHObject;
+	MainWindow::TheInstance()->addToDB(m_unrolledCloud);
+};
 
 
 

@@ -660,9 +660,10 @@ CC_FILE_ERROR DxfFilter::saveToFile(ccHObject* root, const QString& filename, co
 		return CC_FERR_BAD_ARGUMENT;
 
 	ccHObject::Container polylines;
-	root->filterChildren(polylines, true, CC_TYPES::POLY_LINE);
-	if (root->isKindOf(CC_TYPES::POLY_LINE))
-		polylines.push_back(root);
+	
+	root->filterChildren(polylines, false, CC_TYPES::POLY_LINE);
+	//if (root->isKindOf(CC_TYPES::POLY_LINE))
+		//polylines.push_back(root);
 	ccHObject::Container meshes;
 	root->filterChildren(meshes, true, CC_TYPES::MESH);
 	if (root->isKindOf(CC_TYPES::MESH))
