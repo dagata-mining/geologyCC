@@ -3807,8 +3807,8 @@ ccPointCloud* ccPointCloud::unroll(	UnrollMode mode,
 	{
 		alpha_rad = CCCoreLib::DegreesToRadians( coneParams->coneAngle_deg );
 		sin_alpha = static_cast<PointCoordinateType>(sin(alpha_rad));
+		
 	}
-
 	for (unsigned i = 0; i < numberOfPoints; i++)
 	{
 		const CCVector3* Pin = getPoint(i);
@@ -3829,12 +3829,13 @@ ccPointCloud* ccPointCloud::unroll(	UnrollMode mode,
 			//ProjectOnCylinder(AP, dim, params->radius, delta, longitude_rad);
 			float depth = sqrt(AP.x * AP.x + AP.y *AP.y);
 			float angle = -atan2(AP.x, AP.y);
-			float xCylinder = (angle / M_PI_2) * (circumference / 2);
+			
+			float xCylinder = (angle / M_PI) * (circumference / 2);
 			//we project the point
 			//Pout.u[dim.x] = longitude_rad * radius;
 			Pout.x = xCylinder;
 			Pout.y = AP.z;
-			Pout.z = depth;
+			Pout.z = -depth;
 
 		}
 		break;

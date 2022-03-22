@@ -212,6 +212,9 @@ private:
 	// unroll point cloud
 	void unrollPointCloud(float radius, CCVector3 centerPt);
 
+	// generate image unrolled
+	void generateImageUnroll(float zMax, float zMin, float color);
+
 };
 
 #endif

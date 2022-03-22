@@ -783,6 +783,7 @@ void ccStichedImageViewer::changeCamView(CC_VIEW_ORIENTATION orientation)
 	case CC_FRONT_VIEW:
 	{
 		unrollPointCloud(2.5,CCVector3(0,0,0));
+		
 		m_shiftVector = { 0, -1, 0 };
 		m_up = { 0,0,1 };
 		m_forward = { 0,1,0 };
@@ -790,6 +791,8 @@ void ccStichedImageViewer::changeCamView(CC_VIEW_ORIENTATION orientation)
 	}
 	case CC_BACK_VIEW:
 	{
+		generateImageUnroll(0, 0, 0);
+
 		m_shiftVector = { 0, 1, 0 };
 		m_up = { 0,0,1 };
 		m_forward = { 0,-1,0 };
@@ -874,6 +877,84 @@ void ccStichedImageViewer::unrollPointCloud(float radius, CCVector3 centerPt)
 	MainWindow::TheInstance()->addToDB(m_unrolledCloud);
 };
 
+void ccStichedImageViewer::generateImageUnroll(float zMax, float zMin, float color)
+{
+	if (!m_unrolledCloud) { return; }
+	//Generate a new view
+	ccViewportParameters imageViewport;
+	CCVector3 bbMin;
+	CCVector3 bbMax;
+	m_unrolledCloud->getBoundingBox(bbMin, bbMax);
+	bbMin.y += 5;
+	bbMax.y -= 5;
 
+	ccGLWindow* win = MainWindow::GetActiveGLWindow();
+	float windowHeight = (float)win->glHeight();
+	float windowWidth = (float)win->glWidth();
+	//double targetWidth = sqrt(pow((bbMax-bbMin).x,2)+ pow((bbMax - bbMin).y, 2));
+	double targetWidth = (bbMax-bbMin).x;
+	double targetHeight = (bbMax-bbMin).y;
+	double targetRatio = targetHeight/targetWidth;
+	double windowRatio = windowHeight / windowWidth;
+
+
+	double focalDistance;
+	
+
+	if (targetRatio > windowRatio)
+	{
+		//Optimizing Height
+		if (windowHeight < windowWidth)
+		{
+			targetHeight *= static_cast<double>(windowWidth / windowHeight);
+			focalDistance = targetHeight / (imageViewport.computeDistanceToWidthRatio());
+		}
+		else
+		{
+			double distance = (windowWidth / 2)/ std::tan(CCCoreLib::DegreesToRadians(imageViewport.fov_deg / 2.0));
+			double newFOV = atan((windowHeight / 2) / distance);
+			ccLog::Print(QString::number(newFOV));
+			//double multipleHeight = targetHeight / windowHeight;
+			targetHeight *= static_cast<double>(windowWidth / windowHeight);
+			focalDistance = targetHeight / (2*std::tan(newFOV));
+		}
+	}
+	else
+	{
+		//Optimizing Width
+		focalDistance = targetHeight / (imageViewport.computeDistanceToWidthRatio());
+		ccLog::Error("ratio optimizing width");
+	}
+
+
+	
+	CCVector3d eye(0, 0, 1);
+	CCVector3d center(0, 0, 0);
+	CCVector3d top(0, 1, 0);
+	imageViewport.viewMat =  ccGLMatrixd::FromViewDirAndUpDir(center - eye, top);
+	CCVector3d P((bbMax + bbMin).x/2, (bbMax + bbMin).y / 2,0);
+	imageViewport.setCameraCenter(P,false);
+	imageViewport.setFocalDistance(focalDistance);
+	
+	//win->applyViewport(imageViewport);
+	win->setViewportParameters(imageViewport);
+	win->redraw();
+	
+	
+	QImage image = win->renderToImage(10.0, true, false, true);
+	//ccLog::Error(QString("Image Height: %1 focal: %2").arg(image.height()).arg(focalDistance));
+	// Image should be adapted to the height
+	qreal imgHeight = image.height();
+	qreal theoricalWidth = imgHeight / targetRatio;
+	qreal crop = (image.width() - theoricalWidth) / 2;
+	QRect rect(crop, 0, theoricalWidth, imgHeight);
+	image = image.copy(rect);
+
+	image.save("C:/Users/Asus/Pictures/test.png");
+	//win->setCameraPos(P);
+	//CCVector3d v(0, 0, focalDistance);
+	//win->moveCamera(v);
+
+}
 
 
