@@ -121,6 +121,7 @@ void ccPluginUIManager::init()
 				action->setIcon( glPlugin->getIcon() );
 				action->setCheckable( true );
 				
+				
 				// store the plugin's interface pointer in the QAction data so we can access it in enableGLFilter()
 				QVariant v;
 		  
@@ -129,6 +130,7 @@ void ccPluginUIManager::init()
 				action->setData( v );
 				
 				connect( action, &QAction::triggered, this, &ccPluginUIManager::enableGLFilter );
+
 
 				m_glFilterActions.addAction( action );
 				

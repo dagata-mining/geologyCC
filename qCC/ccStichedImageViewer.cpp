@@ -885,8 +885,8 @@ void ccStichedImageViewer::generateImageUnroll(float zMax, float zMin, float col
 	CCVector3 bbMin;
 	CCVector3 bbMax;
 	m_unrolledCloud->getBoundingBox(bbMin, bbMax);
-	bbMin.y += 5;
-	bbMax.y -= 5;
+	bbMin.y += 15;
+	bbMax.y -= 15;
 
 	ccGLWindow* win = MainWindow::GetActiveGLWindow();
 	float windowHeight = (float)win->glHeight();
@@ -896,14 +896,24 @@ void ccStichedImageViewer::generateImageUnroll(float zMax, float zMin, float col
 	double targetHeight = (bbMax-bbMin).y;
 	double targetRatio = targetHeight/targetWidth;
 	double windowRatio = windowHeight / windowWidth;
+	ccLog::Error(QString("Target Height: %1 ratioTarget: %2 ratioWindow: %3").arg(targetHeight).arg(targetRatio).arg(windowRatio));
 
-
+	//Center image
 	double focalDistance;
-	
+	CCVector3d eye(0, 0, 1);
+	CCVector3d center(0, 0, 0);
+	CCVector3d top(0, 1, 0);
+	imageViewport.viewMat = ccGLMatrixd::FromViewDirAndUpDir(center - eye, top);
+	CCVector3d P((bbMax + bbMin).x / 2, (bbMax + bbMin).y / 2, 0);
+	imageViewport.setCameraCenter(P, false);
+	QImage image;
 
 	if (targetRatio > windowRatio)
 	{
 		//Optimizing Height
+		double zoom = targetHeight * 200 / windowHeight;
+		ccLog::Error(QString::number(zoom));
+
 		if (windowHeight < windowWidth)
 		{
 			targetHeight *= static_cast<double>(windowWidth / windowHeight);
@@ -918,37 +928,54 @@ void ccStichedImageViewer::generateImageUnroll(float zMax, float zMin, float col
 			targetHeight *= static_cast<double>(windowWidth / windowHeight);
 			focalDistance = targetHeight / (2*std::tan(newFOV));
 		}
+	
+		imageViewport.setFocalDistance(focalDistance);
+		win->setViewportParameters(imageViewport);
+		win->redraw();
+		
+		image = win->renderToImage(zoom, true, false, true);
+		//ccLog::Error(QString("Image Height: %1 focal: %2").arg(image.height()).arg(focalDistance));
+		// Image should be adapted to the height
+		qreal imgHeight = image.height();
+		qreal theoricalWidth = imgHeight / targetRatio;
+		qreal crop = (image.width() - theoricalWidth) / 2;
+		QRect rect(crop, 0, theoricalWidth, imgHeight);
+		image = image.copy(rect);
 	}
 	else
 	{
 		//Optimizing Width
-		focalDistance = targetHeight / (imageViewport.computeDistanceToWidthRatio());
-		ccLog::Error("ratio optimizing width");
+		double zoom = targetWidth * 200 / windowWidth;
+		ccLog::Error(QString::number(zoom));
+
+		if (windowHeight > windowWidth)
+		{
+			targetWidth *= static_cast<double>(windowWidth / windowHeight);
+		}
+		
+		focalDistance = targetWidth / (imageViewport.computeDistanceToWidthRatio());
+		
+		imageViewport.setFocalDistance(focalDistance);
+		win->setViewportParameters(imageViewport);
+		win->redraw();
+		
+		image = win->renderToImage(zoom, true, false, true);
+
+		// Image should be adapted to the width
+		qreal imgWidth = image.width();
+		qreal theoricalHeight = imgWidth * targetRatio;
+		qreal crop = (image.height() - theoricalHeight) / 2;
+		QRect rect(0, crop, imgWidth, theoricalHeight);
+		image = image.copy(rect);
 	}
 
 
 	
-	CCVector3d eye(0, 0, 1);
-	CCVector3d center(0, 0, 0);
-	CCVector3d top(0, 1, 0);
-	imageViewport.viewMat =  ccGLMatrixd::FromViewDirAndUpDir(center - eye, top);
-	CCVector3d P((bbMax + bbMin).x/2, (bbMax + bbMin).y / 2,0);
-	imageViewport.setCameraCenter(P,false);
-	imageViewport.setFocalDistance(focalDistance);
-	
-	//win->applyViewport(imageViewport);
-	win->setViewportParameters(imageViewport);
-	win->redraw();
 	
 	
-	QImage image = win->renderToImage(10.0, true, false, true);
-	//ccLog::Error(QString("Image Height: %1 focal: %2").arg(image.height()).arg(focalDistance));
-	// Image should be adapted to the height
-	qreal imgHeight = image.height();
-	qreal theoricalWidth = imgHeight / targetRatio;
-	qreal crop = (image.width() - theoricalWidth) / 2;
-	QRect rect(crop, 0, theoricalWidth, imgHeight);
-	image = image.copy(rect);
+	
+	
+	
 
 	image.save("C:/Users/Asus/Pictures/test.png");
 	//win->setCameraPos(P);

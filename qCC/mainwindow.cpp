@@ -10777,7 +10777,9 @@ void MainWindow::updateMenus()
 	m_UI->actionPrevious3DView ->setEnabled(mdiChildCount > 1);
 
 	//Shaders & Filters display Menu
+	
 	bool shadersEnabled = (active3DView ? active3DView->areShadersEnabled() : false);
+
 	m_UI->actionLoadShader->setEnabled(shadersEnabled);
 	m_UI->actionDeleteShader->setEnabled(shadersEnabled);
 
