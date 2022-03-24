@@ -55,7 +55,9 @@ bool DxfFilter::canSave(CC_CLASS_ENUM type, bool& multiple, bool& exclusive) con
 {
 	if (	type == CC_TYPES::POLY_LINE
 		||	type == CC_TYPES::MESH
-		||	type == CC_TYPES::POINT_CLOUD)
+		||	type == CC_TYPES::POINT_CLOUD
+		||  type == CC_TYPES::IMAGE
+		)
 	{
 		multiple = true;
 		exclusive = false;
@@ -1033,6 +1035,394 @@ CC_FILE_ERROR DxfFilter::saveToFile(ccHObject* root, const QString& filename, co
 
 #endif
 }
+
+CC_FILE_ERROR DxfFilter::saveToFileShaft(ccHObject* root, const QString& filename, const SaveParameters& parameters)
+{
+#ifndef CC_DXF_SUPPORT
+
+	ccLog::Error("[DXF] DXF format not supported! Check compilation parameters!");
+	return CC_FERR_CONSOLE_ERROR;
+
+#else
+
+	if (!root || filename.isEmpty())
+		return CC_FERR_BAD_ARGUMENT;
+
+	ccHObject::Container polylines;
+
+	root->filterChildren(polylines, false, CC_TYPES::POLY_LINE);
+	//if (root->isKindOf(CC_TYPES::POLY_LINE))
+		//polylines.push_back(root);
+	ccHObject::Container meshes;
+	root->filterChildren(meshes, true, CC_TYPES::MESH);
+	if (root->isKindOf(CC_TYPES::MESH))
+		meshes.push_back(root);
+	ccHObject::Container clouds;
+	root->filterChildren(clouds, true, CC_TYPES::POINT_CLOUD, true); //we don't want polylines!
+	if (root->isKindOf(CC_TYPES::POINT_CLOUD))
+		clouds.push_back(root);
+
+	if (!clouds.empty())
+	{
+		//remove the polylines vertices
+		ccHObject::Container realClouds;
+		try
+		{
+			for (ccHObject* cloud : clouds)
+			{
+				ccHObject* parent = cloud->getParent();
+				if (parent)
+				{
+					if (parent->isA(CC_TYPES::POLY_LINE))
+					{
+						if (std::find(polylines.begin(), polylines.end(), parent) != polylines.end())
+						{
+							//the parent is already in the 'polylines' set
+							continue;
+						}
+					}
+					else if (parent->isKindOf(CC_TYPES::MESH))
+					{
+						if (std::find(meshes.begin(), meshes.end(), parent) != meshes.end())
+						{
+							//the parent is already in the 'meshes' set
+							continue;
+						}
+					}
+				}
+
+				realClouds.push_back(cloud);
+			}
+			clouds = realClouds;
+		}
+		catch (const std::bad_alloc&)
+		{
+			return CC_FERR_NOT_ENOUGH_MEMORY;
+		}
+	}
+
+	//only polylines and meshes are handled for now
+	size_t polyCount = polylines.size();
+	size_t meshCount = meshes.size();
+	size_t cloudCount = clouds.size();
+	if (polyCount + meshCount + cloudCount == 0)
+		return CC_FERR_NO_SAVE;
+
+	//get global bounding box
+	CCVector3d bbMinCorner;
+	CCVector3d bbMaxCorner;
+	{
+		ccHObject::Container* containers[3] = { &polylines, &meshes, &clouds };
+
+		bool firstEntity = true;
+		for (int j = 0; j < 3; ++j)
+		{
+			for (size_t i = 0; i < containers[j]->size(); ++i)
+			{
+				CCVector3d minC;
+				CCVector3d maxC;
+				if (containers[j]->at(i)->getGlobalBB(minC, maxC))
+				{
+					//update global BB
+					if (firstEntity)
+					{
+						bbMinCorner = minC;
+						bbMaxCorner = maxC;
+						firstEntity = false;
+					}
+					else
+					{
+						bbMinCorner.x = std::min(bbMinCorner.x, minC.x);
+						bbMinCorner.y = std::min(bbMinCorner.y, minC.y);
+						bbMinCorner.z = std::min(bbMinCorner.z, minC.z);
+						bbMaxCorner.x = std::max(bbMaxCorner.x, maxC.x);
+						bbMaxCorner.y = std::max(bbMaxCorner.y, maxC.y);
+						bbMaxCorner.z = std::max(bbMaxCorner.z, maxC.z);
+					}
+				}
+			}
+		}
+	}
+
+	CCVector3d diag = bbMaxCorner - bbMinCorner;
+	double baseSize = std::max(diag.x, diag.y);
+	double lineWidth = baseSize / 40.0;
+	double pageMargin = baseSize / 20.0;
+
+	if (CheckForSpecialChars(filename))
+	{
+		ccLog::Warning(QString("[DXF] Output filename contains special characters. It might be scrambled or rejected by the third party library..."));
+	}
+
+	DL_Dxf dxf;
+	DL_WriterA* dw = dxf.out(qPrintable(filename), DL_VERSION_R12);
+	if (!dw)
+	{
+		return CC_FERR_WRITING;
+	}
+
+	CC_FILE_ERROR result = CC_FERR_NO_ERROR;
+
+	try
+	{
+		dxf.writeComment(*dw, FileIO::createdBy().toStdString());
+		dxf.writeComment(*dw, FileIO::createdDateTime().toStdString());
+
+		//write header
+		dxf.writeHeader(*dw);
+
+		//add dimensions
+		dw->dxfString(9, "$INSBASE");
+		dw->dxfReal(10, 0.0);
+		dw->dxfReal(20, 0.0);
+		dw->dxfReal(30, 0.0);
+		dw->dxfString(9, "$EXTMIN");
+		dw->dxfReal(10, bbMinCorner.x - pageMargin);
+		dw->dxfReal(20, bbMinCorner.y - pageMargin);
+		dw->dxfReal(30, bbMinCorner.z - pageMargin);
+		dw->dxfString(9, "$EXTMAX");
+		dw->dxfReal(10, bbMaxCorner.x + pageMargin);
+		dw->dxfReal(20, bbMaxCorner.y + pageMargin);
+		dw->dxfReal(30, bbMaxCorner.z + pageMargin);
+		dw->dxfString(9, "$LIMMIN");
+		dw->dxfReal(10, bbMinCorner.x - pageMargin);
+		dw->dxfReal(20, bbMinCorner.y - pageMargin);
+		dw->dxfString(9, "$LIMMAX");
+		dw->dxfReal(10, bbMaxCorner.x + pageMargin);
+		dw->dxfReal(20, bbMaxCorner.y + pageMargin);
+
+		//close header
+		dw->sectionEnd();
+
+		//Opening the Tables Section
+		dw->sectionTables();
+		//Writing the Viewports
+		dxf.writeVPort(*dw);
+
+		//Writing the Linetypes (all by default)
+		{
+			dw->tableLinetypes(3);
+			dxf.writeLinetype(*dw, DL_LinetypeData("BYBLOCK", "BYBLOCK", 0, 0, 0.0));
+			dxf.writeLinetype(*dw, DL_LinetypeData("BYLAYER", "BYLAYER", 0, 0, 0.0));
+			dxf.writeLinetype(*dw, DL_LinetypeData("CONTINUOUS", "Continuous", 0, 0, 0.0));
+			dw->tableEnd();
+		}
+
+		//Writing the Layers
+		dw->tableLayers(static_cast<int>(polyCount + meshCount + cloudCount) + 1);
+		QStringList polyLayerNames;
+		QStringList meshLayerNames;
+		QStringList pointLayerNames;
+		{
+			//default layer
+			dxf.writeLayer(*dw,
+				DL_LayerData("0", 0),
+				DL_Attributes(
+					std::string(""),		// leave empty
+					DL_Codes::black,		// default color
+					100,					// default width (in 1/100 mm)
+					"CONTINUOUS",			// default line style
+					1.0						// linetypeScale
+				));
+
+			//polylines layers
+			for (unsigned i = 0; i < polyCount; ++i)
+			{
+				//default layer name
+				//TODO: would be better to use the polyline name!
+				//but it can't be longer than 31 characters (R14 limit)
+				QString layerName = QString("POLYLINE_%1").arg(i + 1, 3, 10, QChar('0'));
+
+				polyLayerNames << layerName;
+				dxf.writeLayer(*dw,
+					DL_LayerData(qPrintable(layerName), 0), //DGM: warning, toStdString doesn't preserve "local" characters
+					DL_Attributes(
+						std::string(""),
+						DL_Codes::green,
+						static_cast<int>(lineWidth),
+						"CONTINUOUS",
+						1.0));
+			}
+
+			//mesh layers
+			for (unsigned j = 0; j < meshCount; ++j)
+			{
+				//default layer name
+				//TODO: would be better to use the mesh name!
+				//but it can't be longer than 31 characters (R14 limit)
+				QString layerName = QString("MESH_%1").arg(j + 1, 3, 10, QChar('0'));
+
+				meshLayerNames << layerName;
+				dxf.writeLayer(*dw,
+					DL_LayerData(qPrintable(layerName), 0), //DGM: warning, toStdString doesn't preserve "local" characters
+					DL_Attributes(
+						std::string(""),
+						DL_Codes::magenta,
+						static_cast<int>(lineWidth),
+						"CONTINUOUS",
+						1.0));
+			}
+
+			//clouds
+			for (unsigned j = 0; j < cloudCount; ++j)
+			{
+				//default layer name
+				//TODO: would be better to use the cloud name!
+				//but it can't be longer than 31 characters (R14 limit)
+				QString layerName = QString("CLOUD_%1").arg(j + 1, 3, 10, QChar('0'));
+
+				pointLayerNames << layerName;
+				dxf.writeLayer(*dw,
+					DL_LayerData(qPrintable(layerName), 0), //DGM: warning, toStdString doesn't preserve "local" characters
+					DL_Attributes(
+						std::string(""),
+						DL_Codes::magenta,
+						static_cast<int>(lineWidth),
+						"CONTINUOUS",
+						1.0));
+			}
+		}
+		dw->tableEnd();
+
+		//Writing Various Other Tables
+		//dxf.writeStyle(*dw); //DXFLIB V2.5
+		dw->tableStyle(1);
+		dxf.writeStyle(*dw, DL_StyleData("Standard", 0, 0.0, 0.75, 0.0, 0, 2.5, "txt", "")); //DXFLIB V3.3
+		dw->tableEnd();
+
+		dxf.writeView(*dw);
+		dxf.writeUcs(*dw);
+
+		dw->tableAppid(1);
+		dw->tableAppidEntry(0x12);
+		dw->dxfString(2, "ACAD");
+		dw->dxfInt(70, 0);
+		dw->tableEnd();
+
+		//Writing Dimension Styles
+		dxf.writeDimStyle(*dw,
+			/*arrowSize*/1,
+			/*extensionLineExtension*/1,
+			/*extensionLineOffset*/1,
+			/*dimensionGap*/1,
+			/*dimensionTextSize*/1);
+
+		//Writing Block Records
+		dxf.writeBlockRecord(*dw);
+		dw->tableEnd();
+
+		//Ending the Tables Section
+		dw->sectionEnd();
+
+		//Writing the Blocks Section
+		{
+			dw->sectionBlocks();
+
+			dxf.writeBlock(*dw, DL_BlockData("*Model_Space", 0, 0.0, 0.0, 0.0));
+			dxf.writeEndBlock(*dw, "*Model_Space");
+
+			dxf.writeBlock(*dw, DL_BlockData("*Paper_Space", 0, 0.0, 0.0, 0.0));
+			dxf.writeEndBlock(*dw, "*Paper_Space");
+
+			dxf.writeBlock(*dw, DL_BlockData("*Paper_Space0", 0, 0.0, 0.0, 0.0));
+			dxf.writeEndBlock(*dw, "*Paper_Space0");
+
+			dw->sectionEnd();
+		}
+
+		//Writing the Entities Section
+		{
+			dw->sectionEntities();
+
+			//write polylines
+			for (unsigned i = 0; i < polyCount; ++i)
+			{
+				const ccPolyline* poly = static_cast<ccPolyline*>(polylines[i]);
+				unsigned vertexCount = poly->size();
+				int flags = poly->isClosed() ? 1 : 0;
+				if (!poly->is2DMode())
+					flags |= 8; //3D polyline
+				dxf.writePolyline(*dw,
+					DL_PolylineData(static_cast<int>(vertexCount), 0, 0, flags),
+					DL_Attributes(qPrintable(polyLayerNames[i]), DL_Codes::bylayer, -1, "BYLAYER", 1.0)); //DGM: warning, toStdString doesn't preserve "local" characters
+
+				for (unsigned v = 0; v < vertexCount; ++v)
+				{
+					CCVector3 Pl;
+					poly->getPoint(v, Pl);
+					CCVector3d P = poly->toGlobal3d(Pl);
+					dxf.writeVertex(*dw, DL_VertexData(P.x, P.y, P.z));
+				}
+
+				dxf.writePolylineEnd(*dw);
+			}
+
+			//write meshes
+			for (unsigned j = 0; j < meshCount; ++j)
+			{
+				ccGenericMesh* mesh = static_cast<ccGenericMesh*>(meshes[j]);
+				ccGenericPointCloud* vertices = mesh->getAssociatedCloud();
+				assert(vertices);
+
+				unsigned triCount = mesh->size();
+				mesh->placeIteratorAtBeginning();
+				for (unsigned f = 0; f < triCount; ++f)
+				{
+					const CCCoreLib::GenericTriangle* tri = mesh->_getNextTriangle();
+					CCVector3d A = vertices->toGlobal3d(*tri->_getA());
+					CCVector3d B = vertices->toGlobal3d(*tri->_getB());
+					CCVector3d C = vertices->toGlobal3d(*tri->_getC());
+					dxf.write3dFace(*dw,
+						DL_3dFaceData(A.x, A.y, A.z,
+							B.x, B.y, B.z,
+							C.x, C.y, C.z,
+							C.x, C.y, C.z,
+							lineWidth),
+						DL_Attributes(qPrintable(meshLayerNames[j]), DL_Codes::bylayer, -1, "BYLAYER", 1.0)); //DGM: warning, toStdString doesn't preserve "local" characters
+				}
+			}
+
+			//write points
+			for (unsigned i = 0; i < cloudCount; ++i)
+			{
+				const ccPointCloud* cloud = static_cast<ccPointCloud*>(clouds[i]);
+				unsigned pointCount = cloud->size();
+
+				for (unsigned j = 0; j < pointCount; ++j)
+				{
+					const CCVector3* P = cloud->getPoint(j);
+					CCVector3d Pg = cloud->toGlobal3d(*P);
+					dxf.writePoint(*dw,
+						DL_PointData(Pg.x, Pg.y, Pg.z),
+						DL_Attributes(qPrintable(pointLayerNames[i]), DL_Codes::bylayer, -1, "BYLAYER", 1.0)); //DGM: warning, toStdString doesn't preserve "local" characters
+				}
+			}
+
+			dw->sectionEnd();
+		}
+
+		//Writing the Objects Section
+		dxf.writeObjects(*dw);
+		dxf.writeObjectsEnd(*dw);
+
+		//Ending and Closing the File
+		dw->dxfEOF();
+		dw->close();
+	}
+	catch (...)
+	{
+		ccLog::Warning("[DXF] DxfLib has thrown an unknown exception!");
+		result = CC_FERR_THIRD_PARTY_LIB_EXCEPTION;
+	}
+
+	delete dw;
+	dw = nullptr;
+
+	return result;
+
+#endif
+}
+
 
 CC_FILE_ERROR DxfFilter::loadFile(const QString& filename, ccHObject& container, LoadParameters& parameters)
 {

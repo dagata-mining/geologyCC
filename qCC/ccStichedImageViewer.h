@@ -215,6 +215,12 @@ private:
 	// generate image unrolled
 	void generateImageUnroll(float zMax, float zMin, float color);
 
+	// Clean Cloud
+	ccPointCloud* cleanUnrollOctree(float octreeSize);
+	CCCoreLib::ReferenceCloud* removeHiddenPoints(CCCoreLib::GenericIndexedCloudPersist * theCloud,CCVector3 bbMin, CCVector3 bbMax, float leafSize);
+	void actionCleanUnroll();
+
+	void ccStichedImageViewer::saveDxf(QImage img);
 };
 
 #endif

@@ -30,7 +30,8 @@ public:
 	CC_FILE_ERROR loadFile(const QString& filename, ccHObject& container, LoadParameters& parameters) override;
 
 	bool canSave(CC_CLASS_ENUM type, bool& multiple, bool& exclusive) const override;
-	CC_FILE_ERROR saveToFile(ccHObject* entity, const QString& filename, const SaveParameters& parameters) override;	
+	CC_FILE_ERROR saveToFile(ccHObject* entity, const QString& filename, const SaveParameters& parameters) override;
+	CC_FILE_ERROR saveToFileShaft(ccHObject* root, const QString& filename, const SaveParameters& parameters);
 };
 
 #endif //CC_DXF_FILTER_HEADER

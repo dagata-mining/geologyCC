@@ -783,6 +783,7 @@ void ccStichedImageViewer::changeCamView(CC_VIEW_ORIENTATION orientation)
 	case CC_FRONT_VIEW:
 	{
 		unrollPointCloud(2.5,CCVector3(0,0,0));
+		actionCleanUnroll();
 		
 		m_shiftVector = { 0, -1, 0 };
 		m_up = { 0,0,1 };
@@ -969,14 +970,6 @@ void ccStichedImageViewer::generateImageUnroll(float zMax, float zMin, float col
 		image = image.copy(rect);
 	}
 
-
-	
-	
-	
-	
-	
-	
-
 	image.save("C:/Users/Asus/Pictures/test.png");
 	//win->setCameraPos(P);
 	//CCVector3d v(0, 0, focalDistance);
@@ -984,4 +977,240 @@ void ccStichedImageViewer::generateImageUnroll(float zMax, float zMin, float col
 
 }
 
+void ccStichedImageViewer::saveDxf(QImage img) 
+{
+
+}
+
+
+void ccStichedImageViewer::actionCleanUnroll() 
+{
+	ccPointCloud* cleanCloud = cleanUnrollOctree(10);
+	if (!cleanCloud) return;
+	MainWindow::TheInstance()->addToDB(cleanCloud);
+}
+
+ccPointCloud* ccStichedImageViewer::cleanUnrollOctree(float octreeSize)
+{
+	ccPointCloud* resultCloud = nullptr;
+	//unique parameter: the octree subdivision level
+	unsigned octreeLevel = 10;
+	assert(octreeLevel >= 0 && octreeLevel <= CCCoreLib::DgmOctree::MAX_OCTREE_LEVEL);
+
+
+	ccOctree::Shared theOctree = m_unrolledCloud->computeOctree();
+	
+
+	if (!theOctree)
+	{
+		ccLog::Error("Couldn't compute octree!");
+		return resultCloud;
+	}
+
+	
+	CCVector3 bbMin;
+	CCVector3 bbMax;
+	theOctree.data()->getBoundingBox(bbMin, bbMax);
+	
+	// New Approach
+	
+	float leafSize = theOctree.data()->getCellSize(octreeLevel);
+	ccLog::Error(QString("leaf size %1").arg(leafSize));
+	
+	CCCoreLib::DgmOctree::cellCodesContainer cellCodes;
+	int octreeNumber = theOctree.data()->getCellNumber(octreeLevel);
+	try
+	{
+		cellCodes.reserve(octreeNumber);
+	}
+	catch (const std::bad_alloc&)
+	{
+		ccLog::Error("Not enough memory");
+		return resultCloud;
+	}
+		
+	//ccLog::Error(QString("Qty of cells %1").arg(OctreeNumber));
+	// Get cell codes
+	theOctree.data()->getCellCodes(octreeLevel, cellCodes, false);
+	
+
+	std::vector < std::vector<std::pair<unsigned long long, int>>> zDepthMat;
+	std::pair<unsigned long long, int> initPair = std::make_pair(0, INT_MAX);
+	int zDepthMatWidth = (int)round((bbMax.x - bbMin.x) / leafSize);
+	int zDepthMatHeight = (int)round((bbMax.y - bbMin.y) / leafSize);
+	zDepthMat.resize(zDepthMatHeight);
+	for (int i = 0; i < zDepthMatHeight; i++)
+	{
+		zDepthMat[i].resize(zDepthMatWidth);
+		std::fill(zDepthMat[i].begin(), zDepthMat[i].end(), initPair);
+	}
+
+	// Keeping the smallestZ cell in the 2D grid
+	for (int i = 0; i < cellCodes.size(); i++)
+	{
+		unsigned long long cellCode = cellCodes[i];
+		Tuple3i pos;
+		theOctree->getCellPos(cellCode, octreeLevel, pos, false);
+
+		unsigned long long savedCellCode = zDepthMat[pos.y][pos.x].first;
+		if (savedCellCode == 0)
+		{
+			zDepthMat[pos.y][pos.x].first = cellCode;
+			zDepthMat[pos.y][pos.x].second = pos.z;
+		}
+		else
+		{
+			if (zDepthMat[pos.y][pos.x].second > pos.z)
+			{
+				zDepthMat[pos.y][pos.x].first = cellCode;
+				zDepthMat[pos.y][pos.x].second = pos.z;
+			}
+		}
+	}
+
+	CCCoreLib::DgmOctree::cellCodesContainer visibleCellCodes;
+	// Adding surrounding and visible octrees 
+	for (int i = 0; i < cellCodes.size(); i++)
+	{
+		unsigned long long cellCode = cellCodes[i];
+		Tuple3i pos;
+		theOctree->getCellPos(cellCode, octreeLevel, pos, false);
+		int max = pow(2, octreeLevel);
+
+		int savedZPos = zDepthMat[pos.y][pos.x].second;
+
+
+		if (savedZPos == pos.z ||
+			savedZPos == pos.z - 1 ||
+			savedZPos == pos.z + 1 ||
+			zDepthMat[pos.y+1 >= max ? max : pos.y + 1][pos.x].second == pos.z ||
+			zDepthMat[pos.y][pos.x + 1 >= max ? max : pos.x + 1 ].second == pos.z ||
+			//savedZPos == zDepthMat[pos.y + 1 >= max ? max : pos.y + 1][pos.x + 1 >= max ? max : pos.x + 1].second ||
+			zDepthMat[pos.y - 1 <= 0 ? 0 : pos.y - 1][pos.x].second == pos.z ||
+			zDepthMat[pos.y][pos.x - 1 <= 0 ? 0 : pos.x - 1].second == pos.z //||
+			//savedZPos == zDepthMat[pos.y - 1 <= 0 ? 0 : pos.y - 1][pos.x - 1 <= 0 ? 0 : pos.x - 1].second
+			
+			)
+		{
+			visibleCellCodes.push_back(cellCode);
+		}
+	}
+	
+
+	if (!visibleCellCodes.empty())
+	{
+		std::sort(visibleCellCodes.begin(), visibleCellCodes.end());
+		
+		CCCoreLib::ReferenceCloud allPoints(theOctree->associatedCloud());
+		CCCoreLib::ReferenceCloud* visiblePoints = theOctree->getPointsInCellsWithSortedCellCodes(visibleCellCodes, octreeLevel, &allPoints, false);
+
+	
+		visibleCellCodes.clear();
+
+		ccLog::Print(QString("[HPR] Visible points: %1").arg(visiblePoints->size()));
+
+		if (visiblePoints->size() == m_unrolledCloud->size())
+		{
+			ccLog::Error("No points were removed!");
+		}
+		else
+		{
+			//create cloud from visibility selection
+			resultCloud = m_unrolledCloud->partialClone(visiblePoints);
+			if (!resultCloud)
+			{
+				ccLog::Error("Not enough memory!");
+			}
+
+		}
+	}
+	resultCloud->setName("cleanCloud");
+	return resultCloud;
+}
+
+CCCoreLib::ReferenceCloud * ccStichedImageViewer::removeHiddenPoints(CCCoreLib::GenericIndexedCloudPersist * theCloud, CCVector3 bbMin, CCVector3 bbMax, float leafSize)
+{
+	assert(theCloud);
+
+	unsigned nbPoints = theCloud->size();
+	if (nbPoints == 0)
+		return nullptr;
+
+	//less than 4 points? no need for calculation, we return the whole cloud
+	if (nbPoints < 4)
+	{
+		CCCoreLib::ReferenceCloud* visiblePoints = new CCCoreLib::ReferenceCloud(theCloud);
+		if (!visiblePoints->addPointIndex(0, nbPoints)) //well even for less than 4 points we never know ;)
+		{
+			//not enough memory!
+			delete visiblePoints;
+			visiblePoints = nullptr;
+		}
+		return visiblePoints;
+	}
+
+	// Create a 2D matrix
+
+	//m_unrolledCloud->getBoundingBox(bbMin, bbMax);
+	int zDepthMatWidth = (int)ceil((bbMax.x - bbMin.x) / leafSize);
+	int zDepthMatHeight = (int)ceil((bbMax.y - bbMin.y) / leafSize);
+	std::vector<std::vector<int>> zDepthMat;
+	zDepthMat.resize(zDepthMatHeight);
+	for (int i = 0; i < zDepthMatHeight; i++)
+	{
+		zDepthMat[i].resize(zDepthMatWidth);
+		std::fill(zDepthMat[i].begin(), zDepthMat[i].end(), -1);
+	}
+
+	// Iterate throught all the center points and update if the leaf size is closer 
+	int visibleSize = 0;
+	for (int i = 0; i < nbPoints; ++i)
+	{
+		float Px = theCloud->getPoint(i)->x - bbMin.x;
+		float Py = theCloud->getPoint(i)->y - bbMin.y;
+		float Pz = theCloud->getPoint(i)->z;
+		int row = (int)floor(Py / leafSize);
+		int column = (int)floor(Px / leafSize);
+		int ptIdLocked = zDepthMat[row][column];
+		if (ptIdLocked == -1)
+		{
+			zDepthMat[row][column] = i;
+			visibleSize++;
+		}
+		else
+		{
+			float lockedZ = theCloud->getPoint(ptIdLocked)->z;
+			if (lockedZ < Pz)
+			{
+				// We update the id because the depth is smaller
+				zDepthMat[row][column] = i;
+			}
+		}
+	}
+	//ccLog::Error(QString("Visible size %1").arg(visibleSize));
+	int gg = 0;
+	CCCoreLib::ReferenceCloud* visiblePoints = new CCCoreLib::ReferenceCloud(theCloud);
+	if (visibleSize != 0 && visiblePoints->reserve(visibleSize))
+	{
+		for (int row = 0; row < zDepthMatHeight; ++row)
+		{
+			for (int col = 0; col < zDepthMatWidth; ++col)
+			{
+				int visibleIndex = zDepthMat[row][col];
+				if (visibleIndex != -1)
+				{
+					visiblePoints->addPointIndex(visibleIndex);
+					gg++;
+				}
+			}
+		}
+		//ccLog::Error(QString("Visiblepoints size %1").arg(gg));;
+		return visiblePoints;
+	}
+	else //not enough memory
+	{
+		delete visiblePoints;
+		visiblePoints = nullptr;
+	}
+}
 
