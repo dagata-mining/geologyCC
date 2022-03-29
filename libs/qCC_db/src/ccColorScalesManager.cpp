@@ -329,6 +329,7 @@ ccColorScalesManager::ccColorScalesManager()
 	//Create default scales
 	{
 		addScale(Create(BGYR));
+		addScale(Create(CONVERGENCE));
 		addScale(Create(GREY));
 		addScale(Create(BWR));
 		addScale(Create(RY));
@@ -519,6 +520,8 @@ ccColorScale::Shared ccColorScalesManager::Create(DEFAULT_SCALES scaleType)
 		{
 			case BGYR:
 				return QStringLiteral("Blue>Green>Yellow>Red");
+			case CONVERGENCE:
+				return QStringLiteral("Convergence");
 			case GREY:
 				return QStringLiteral("Grey");
 			case GREY_SHAFT:
@@ -600,6 +603,15 @@ ccColorScale::Shared ccColorScalesManager::Create(DEFAULT_SCALES scaleType)
 		scale->customLabels().insert(0);
 		scale->customLabels().insert(0.5);
 		scale->customLabels().insert(1.0);
+		break;
+	case CONVERGENCE:
+		scale->insert(ccColorScaleElement(0.0, Qt::blue), false);
+		scale->insert(ccColorScaleElement(0.45, Qt::yellow), false);
+		scale->insert(ccColorScaleElement(0.55, Qt::yellow), false);
+		scale->insert(ccColorScaleElement(1.0, Qt::red), false);
+		scale->setAbsolute(-0.15, 0.15);
+		
+
 		break;
 	case HSV_360_DEG:
 		scale->insert(ccColorScaleElement(  0.0/360.0, Qt::red    ), false);

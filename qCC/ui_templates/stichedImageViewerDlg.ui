@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>ImageStichedViewer</class>
- <widget class="QWidget" name="stichedWidget">
+ <widget class="QWidget" name="ImageStichedViewer">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -347,10 +347,20 @@
     <string>Speed</string>
    </property>
   </widget>
+  <widget class="QToolButton" name="unroll">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>50</y>
+     <width>91</width>
+     <height>19</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Unroll</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>
- <buttongroups>
-  <buttongroup name="buttonGroup"/>
- </buttongroups>
 </ui>

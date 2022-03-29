@@ -56,6 +56,7 @@ class ccPointListPickingDlg;
 class ccPointPairRegistrationDlg;
 class ccPointPropertiesDlg;
 class ccPrimitiveFactoryDlg;
+class ccUnrollCleanDlg;
 class ccRecentFiles;
 class ccSectionExtractionTool;
 class ccStdPluginInterface;
@@ -182,6 +183,7 @@ public:
 	void toggleActiveWindowViewerBasedPerspective() override;
 	void toggleActiveWindowViewerBasedCam();
 
+	void doActionUnrollClean();
 
 private:
 	//! Creates a new 3D GL sub-window

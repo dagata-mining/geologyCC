@@ -392,6 +392,7 @@
       <string>Projection</string>
      </property>
      <addaction name="actionUnroll"/>
+     <addaction name="actionUnrollClean"/>
      <addaction name="actionRasterize"/>
      <addaction name="actionConvertPolylinesToMesh"/>
      <addaction name="actionExportCoordToSF"/>
@@ -1529,6 +1530,17 @@ QTreeView::branch:open:has-children:has-siblings  {
     <string>Unroll entity on a cylinder or a cone</string>
    </property>
   </action>
+   <action name="actionUnrollClean">
+     <property name="text">
+       <string>Unroll Shaft</string>
+     </property>
+     <property name="toolTip">
+       <string>Unroll Shaft</string>
+     </property>
+     <property name="statusTip">
+       <string>Unroll Shaft</string>
+     </property>
+   </action>
   <action name="actionSFGradient">
    <property name="icon">
     <iconset resource="../icons.qrc">

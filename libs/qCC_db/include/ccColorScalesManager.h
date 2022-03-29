@@ -54,7 +54,8 @@ public:
 							YELLOW_BROWN	=	12,		/**< Yellow-Brown */
 							TOPO_LANDSERF	=	13,		/**< Topo Landserf (quartile) */
 							HIGH_CONTRAST	=	14,		/**< High constrast */
-							GREY_SHAFT		=	15		/**< Grey Shaft */
+							GREY_SHAFT		=	15,		/**< Grey Shaft */
+							CONVERGENCE		=	16		/**< Grey Shaft */
 	};
 
 	//! Returns a pre-defined color scale UUID

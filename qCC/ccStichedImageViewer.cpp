@@ -34,7 +34,8 @@
 #include <ccFileUtils.h>
 #include <ccPointCloud.h>
 #include <ccImageDrawer.h>
-
+#include <ccScalarField.h>
+#include <ccColorScalesManager.h>
 //Qt
 #include <QApplication>
 #include <QClipboard>
@@ -120,6 +121,7 @@ ccStichedImageViewer::ccStichedImageViewer(QWidget* parent = nullptr, ccPickingH
 	
 	//connect(m_ui->shaftButton, &QAbstractButton::toggled, this, &ccStichedImageViewer::setShaftMode);
 	connect(m_ui->chooseImage, &QToolButton::clicked, this, &ccStichedImageViewer::chooseImageAction);
+	connect(m_ui->unroll, &QToolButton::clicked, this, &ccStichedImageViewer::unrollClick);
 	connect(m_ui->exportCSVPlan, &QToolButton::clicked, this, &ccStichedImageViewer::planeToFile);
 	connect(m_ui->importCSVPlan, &QToolButton::clicked, this, &ccStichedImageViewer::planeFromFile);
 	connect(m_ui->spinBoxNode, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ccStichedImageViewer::updateNodeId);
@@ -208,6 +210,7 @@ void ccStichedImageViewer::addComboBoxItem()
 void ccStichedImageViewer::disableAllWidget() 
 {
 	m_ui->chooseImage->setEnabled(false);
+	m_ui->unroll->setEnabled(false);
 	m_ui->comboBoxPointCloud->setEnabled(false);
 	m_ui->exportCSVPlan->setEnabled(false);
 	m_ui->importCSVPlan->setEnabled(false);
@@ -227,6 +230,7 @@ void ccStichedImageViewer::disableAllWidget()
 void ccStichedImageViewer::enableAllWidget()
 {
 	m_ui->chooseImage->setEnabled(true);
+	m_ui->unroll->setEnabled(true);
 	m_ui->comboBoxPointCloud->setEnabled(true);
 	m_ui->spinBoxNode->setEnabled(true);
 	m_ui->spinBoxPlan->setEnabled(true);
@@ -782,8 +786,7 @@ void ccStichedImageViewer::changeCamView(CC_VIEW_ORIENTATION orientation)
 	{
 	case CC_FRONT_VIEW:
 	{
-		unrollPointCloud(2.5,CCVector3(0,0,0));
-		actionCleanUnroll();
+		//MainWindow::TheInstance()->doActionUnrollClean();
 		
 		m_shiftVector = { 0, -1, 0 };
 		m_up = { 0,0,1 };
@@ -866,17 +869,6 @@ void ccStichedImageViewer::setCameraNodePosition()
 
 }
 
-void ccStichedImageViewer::unrollPointCloud(float radius, CCVector3 centerPt)
-{
-	
-	ccPointCloud::UnrollCylinderParams params;
-	params.axisDim = 2;
-	params.center = centerPt;
-	params.radius = radius;
-	m_unrolledCloud = m_currentPointCloud->unroll(ccPointCloud::UnrollMode::CYLINDER, &params, false, 0, 360);
-	//ccHObject* imagesFolder = new ccHObject;
-	MainWindow::TheInstance()->addToDB(m_unrolledCloud);
-};
 
 void ccStichedImageViewer::generateImageUnroll(float zMax, float zMin, float color)
 {
@@ -981,30 +973,101 @@ void ccStichedImageViewer::saveDxf(QImage img)
 {
 
 }
-
-
-void ccStichedImageViewer::actionCleanUnroll() 
+void ccStichedImageViewer::unrollClick() 
 {
-	ccPointCloud* cleanCloud = cleanUnrollOctree(10);
-	if (!cleanCloud) return;
-	MainWindow::TheInstance()->addToDB(cleanCloud);
+	if (!m_currentPointCloud)
+	{
+		ccLog::Error("Could not unroll no point cloud is associated");
+		return;
+	}
+
+	if (m_unrolledCloud)
+	{
+		MainWindow::TheInstance()->removeFromDB(m_unrolledCloud);
+		m_unrolledCloud = nullptr;
+	}
+	MainWindow::TheInstance()->doActionUnrollClean();
 }
 
-ccPointCloud* ccStichedImageViewer::cleanUnrollOctree(float octreeSize)
+void ccStichedImageViewer::actionUnroll(ccPointCloud* currentCloud, ccPointCloud* &outCloudUnrolled,
+											float radius, CCVector3 center, bool exportDistance,
+											CCCoreLib::GenericProgressCallback* progressCb)
+{	
+	ccPointCloud::UnrollCylinderParams params;
+	params.axisDim = 2;
+	params.center = center;
+	params.radius = radius;
+
+	outCloudUnrolled = currentCloud->unroll(ccPointCloud::UnrollMode::CYLINDER, &params, exportDistance, 0, 360,progressCb);
+	// Apply sf to oldCloud
+	if (exportDistance)
+	{
+		int sfIdxUnrolled = outCloudUnrolled->getScalarFieldIndexByName("Deviation");
+		int sfIdxCloud = currentCloud->addScalarField("Deviation");
+		if (sfIdxCloud < 0 || sfIdxUnrolled < 0)
+		{
+			ccLog::Warning("[Unroll] Not enough memory to init the deviation scalar field");
+		}
+		
+		else
+		{
+			CCCoreLib::ScalarField* deviationSFUnrolled = outCloudUnrolled->getScalarField(sfIdxUnrolled);
+			CCCoreLib::ScalarField* deviationSFCloud = currentCloud->getScalarField(sfIdxCloud);
+			for (int i = 0; i < currentCloud->size(); i++)
+			{
+				deviationSFCloud->setValue(i, deviationSFUnrolled->at(i));
+				
+			}
+			deviationSFCloud->computeMinAndMax();
+			ccScalarField* sfU = static_cast<ccScalarField*>(deviationSFUnrolled);
+			ccScalarField* sfC = static_cast<ccScalarField*>(deviationSFCloud);
+			sfU->setColorScale(ccColorScalesManager::GetDefaultScale(ccColorScalesManager::CONVERGENCE));
+			sfC->setColorScale(ccColorScalesManager::GetDefaultScale(ccColorScalesManager::CONVERGENCE));
+			
+		}
+	}
+
+}
+
+void ccStichedImageViewer::cleanUnrollOctree(int octreeLevel, float radius, ccPointCloud* currentCloud , ccPointCloud* unrolledCloud,
+											ccPointCloud* &outCleanUnrolled, ccPointCloud* &outCloudClean, ccPointCloud* &outCloudRemaining,
+											CCCoreLib::GenericProgressCallback* progressCb)
 {
-	ccPointCloud* resultCloud = nullptr;
+	//ccPointCloud* unrolledCloudClean(new ccPointCloud);
+	//ccPointCloud* cloudClean(new ccPointCloud);
+	//ccPointCloud* cloudRemaining(new ccPointCloud);
 	//unique parameter: the octree subdivision level
-	unsigned octreeLevel = 10;
+
 	assert(octreeLevel >= 0 && octreeLevel <= CCCoreLib::DgmOctree::MAX_OCTREE_LEVEL);
-
-
-	ccOctree::Shared theOctree = m_unrolledCloud->computeOctree();
+	if (progressCb)
+	{
+		progressCb->setMethodTitle("Cleaning Cloud");
+		progressCb->setInfo(qPrintable(QString("Number of points = %1").arg(octreeLevel)));
+	}
 	
 
+	ccOctree::Shared theOctree = unrolledCloud->getOctree();
+	if (!theOctree)
+	{
+		theOctree = unrolledCloud->computeOctree();
+	}
+	
 	if (!theOctree)
 	{
 		ccLog::Error("Couldn't compute octree!");
-		return resultCloud;
+		return;
+	}
+
+	ccOctree::Shared cloudOctree = currentCloud->getOctree();
+	if (!cloudOctree)
+	{
+		cloudOctree = currentCloud->computeOctree();
+	}
+
+	if (!cloudOctree)
+	{
+		ccLog::Error("Couldn't compute octree!");
+		return;
 	}
 
 	
@@ -1015,7 +1078,6 @@ ccPointCloud* ccStichedImageViewer::cleanUnrollOctree(float octreeSize)
 	// New Approach
 	
 	float leafSize = theOctree.data()->getCellSize(octreeLevel);
-	ccLog::Error(QString("leaf size %1").arg(leafSize));
 	
 	CCCoreLib::DgmOctree::cellCodesContainer cellCodes;
 	int octreeNumber = theOctree.data()->getCellNumber(octreeLevel);
@@ -1026,7 +1088,7 @@ ccPointCloud* ccStichedImageViewer::cleanUnrollOctree(float octreeSize)
 	catch (const std::bad_alloc&)
 	{
 		ccLog::Error("Not enough memory");
-		return resultCloud;
+		return;
 	}
 		
 	//ccLog::Error(QString("Qty of cells %1").arg(OctreeNumber));
@@ -1043,6 +1105,17 @@ ccPointCloud* ccStichedImageViewer::cleanUnrollOctree(float octreeSize)
 	{
 		zDepthMat[i].resize(zDepthMatWidth);
 		std::fill(zDepthMat[i].begin(), zDepthMat[i].end(), initPair);
+	}
+
+	CCCoreLib::NormalizedProgress nprogress(progressCb, cellCodes.size());
+	if (progressCb)
+	{
+		if (progressCb->textCanBeEdited())
+		{
+			progressCb->setInfo(qPrintable(QString("Number of cells = %1").arg(cellCodes.size())));
+		}
+		progressCb->update(0);
+		progressCb->start();
 	}
 
 	// Keeping the smallestZ cell in the 2D grid
@@ -1066,66 +1139,151 @@ ccPointCloud* ccStichedImageViewer::cleanUnrollOctree(float octreeSize)
 				zDepthMat[pos.y][pos.x].second = pos.z;
 			}
 		}
+		if (progressCb && !nprogress.oneStep())
+		{
+			ccLog::Warning("Process cancelled by user");
+			return;
+		}
 	}
 
-	CCCoreLib::DgmOctree::cellCodesContainer visibleCellCodes;
+	
+	
+
+	int max = pow(2, octreeLevel);
+	std::vector<unsigned long long> cellClean;
+	std::vector<unsigned long long> cellHidden;
+
+	nprogress.reset();
+	if (progressCb)
+	{
+		if (progressCb->textCanBeEdited())
+		{
+			progressCb->setInfo(qPrintable(QString("Number of cells visible = %1").arg(cellCodes.size())));
+		}
+		progressCb->update(0);
+		progressCb->start();
+	}
 	// Adding surrounding and visible octrees 
 	for (int i = 0; i < cellCodes.size(); i++)
 	{
 		unsigned long long cellCode = cellCodes[i];
 		Tuple3i pos;
 		theOctree->getCellPos(cellCode, octreeLevel, pos, false);
-		int max = pow(2, octreeLevel);
-
+		
+		
 		int savedZPos = zDepthMat[pos.y][pos.x].second;
 
-
+		//getNeighborCellsAround
 		if (savedZPos == pos.z ||
-			savedZPos == pos.z - 1 ||
-			savedZPos == pos.z + 1 ||
+			// middle
 			zDepthMat[pos.y+1 >= max ? max : pos.y + 1][pos.x].second == pos.z ||
 			zDepthMat[pos.y][pos.x + 1 >= max ? max : pos.x + 1 ].second == pos.z ||
-			//savedZPos == zDepthMat[pos.y + 1 >= max ? max : pos.y + 1][pos.x + 1 >= max ? max : pos.x + 1].second ||
+			zDepthMat[pos.y + 1 >= max ? max : pos.y + 1][pos.x + 1 >= max ? max : pos.x + 1].second == pos.z ||
 			zDepthMat[pos.y - 1 <= 0 ? 0 : pos.y - 1][pos.x].second == pos.z ||
-			zDepthMat[pos.y][pos.x - 1 <= 0 ? 0 : pos.x - 1].second == pos.z //||
-			//savedZPos == zDepthMat[pos.y - 1 <= 0 ? 0 : pos.y - 1][pos.x - 1 <= 0 ? 0 : pos.x - 1].second
-			
+			zDepthMat[pos.y][pos.x - 1 <= 0 ? 0 : pos.x - 1].second == pos.z ||
+			zDepthMat[pos.y - 1 <= 0 ? 0 : pos.y - 1][pos.x - 1 <= 0 ? 0 : pos.x - 1].second == pos.z ||
+			//back
+			savedZPos == pos.z - 1 ||
+			savedZPos == pos.z - 2 ||
+			zDepthMat[pos.y + 1 >= max ? max : pos.y + 1][pos.x].second == pos.z - 1 ||
+			zDepthMat[pos.y][pos.x + 1 >= max ? max : pos.x + 1].second == pos.z - 1 ||
+			zDepthMat[pos.y + 1 >= max ? max : pos.y + 1][pos.x + 1 >= max ? max : pos.x + 1].second == pos.z - 1 ||
+			zDepthMat[pos.y - 1 <= 0 ? 0 : pos.y - 1][pos.x].second == pos.z - 1 ||
+			zDepthMat[pos.y][pos.x - 1 <= 0 ? 0 : pos.x - 1].second == pos.z - 1 ||
+			zDepthMat[pos.y - 1 <= 0 ? 0 : pos.y - 1][pos.x - 1 <= 0 ? 0 : pos.x - 1].second == pos.z - 1 ||
+			//front
+			savedZPos == pos.z + 1 ||
+			savedZPos == pos.z + 2 ||
+			zDepthMat[pos.y + 1 >= max ? max : pos.y + 1][pos.x].second == pos.z + 1 ||
+			zDepthMat[pos.y][pos.x + 1 >= max ? max : pos.x + 1].second == pos.z + 1 ||
+			zDepthMat[pos.y + 1 >= max ? max : pos.y + 1][pos.x + 1 >= max ? max : pos.x + 1].second == pos.z + 1 ||
+			zDepthMat[pos.y - 1 <= 0 ? 0 : pos.y - 1][pos.x].second == pos.z + 1 ||
+			zDepthMat[pos.y][pos.x - 1 <= 0 ? 0 : pos.x - 1].second == pos.z + 1 ||
+			zDepthMat[pos.y - 1 <= 0 ? 0 : pos.y - 1][pos.x - 1 <= 0 ? 0 : pos.x - 1].second == pos.z + 1 			
 			)
 		{
-			visibleCellCodes.push_back(cellCode);
+			cellClean.push_back(cellCode);
+		}
+		else
+		{
+			cellHidden.push_back(cellCode);	
+		}
+		if (progressCb && !nprogress.oneStep())
+		{
+			ccLog::Warning("Process cancelled by user");
+			return;
 		}
 	}
-	
-
-	if (!visibleCellCodes.empty())
+	if (progressCb)
 	{
-		std::sort(visibleCellCodes.begin(), visibleCellCodes.end());
-		
-		CCCoreLib::ReferenceCloud allPoints(theOctree->associatedCloud());
-		CCCoreLib::ReferenceCloud* visiblePoints = theOctree->getPointsInCellsWithSortedCellCodes(visibleCellCodes, octreeLevel, &allPoints, false);
+		progressCb->stop();
+	}
 
+	CCCoreLib::ReferenceCloud unrolledRefCloud(unrolledCloud);
+	CCCoreLib::ReferenceCloud unrolledObstructRefCloud(unrolledCloud);
+	CCCoreLib::ReferenceCloud visibleRefCloud(currentCloud);
+	CCCoreLib::ReferenceCloud obstructRefCloud(currentCloud);
 	
-		visibleCellCodes.clear();
+	theOctree->getPointsInCellsWithSortedCellCodes(cellClean, octreeLevel, &unrolledRefCloud);
+	for (int i = 0; i < unrolledRefCloud.size(); i++)
+	{
+		int index = unrolledRefCloud.getPointGlobalIndex(i);
+		visibleRefCloud.addPointIndex(index);
+	}
 
-		ccLog::Print(QString("[HPR] Visible points: %1").arg(visiblePoints->size()));
+	theOctree->getPointsInCellsWithSortedCellCodes(cellHidden, octreeLevel, &unrolledObstructRefCloud);
+	for (int i = 0; i < unrolledObstructRefCloud.size(); i++)
+	{
+		int index = unrolledObstructRefCloud.getPointGlobalIndex(i);
+		obstructRefCloud.addPointIndex(index);
+	}
 
-		if (visiblePoints->size() == m_unrolledCloud->size())
+		if (visibleRefCloud.size() == unrolledCloud->size())
 		{
 			ccLog::Error("No points were removed!");
 		}
 		else
 		{
 			//create cloud from visibility selection
-			resultCloud = m_unrolledCloud->partialClone(visiblePoints);
-			if (!resultCloud)
+			outCleanUnrolled = unrolledCloud->partialClone(&unrolledRefCloud);
+			unrolledRefCloud.clear();
+			unrolledCloud->clear();
+			if (!outCleanUnrolled)
 			{
 				ccLog::Error("Not enough memory!");
+				return;
+			}
+			
+			
+
+
+			QString nameCloud = currentCloud->getName();
+			outCloudClean = currentCloud->partialClone(&visibleRefCloud);
+			outCloudClean->setImagePointCloud(true);
+			outCloudClean->setTrajectoryCloud(m_currentTrajectory);
+			outCloudClean->setName(QString("%1.clean").arg(nameCloud));
+			visibleRefCloud.clear();
+
+			if (!outCloudClean)
+			{
+				ccLog::Error("Not enough memory!");
+				return;
 			}
 
+			outCloudRemaining = currentCloud->partialClone(&obstructRefCloud);
+			outCloudRemaining->setImagePointCloud(true);
+			outCloudRemaining->setTrajectoryCloud(m_currentTrajectory);
+			outCloudRemaining->setName(QString("%1.remaining").arg(nameCloud));
+			obstructRefCloud.clear();
+			if (!outCloudRemaining)
+			{
+				ccLog::Error("Not enough memory!");
+				return;
+			}
+			currentCloud->clear();
 		}
-	}
-	resultCloud->setName("cleanCloud");
-	return resultCloud;
+	
+	return;
 }
 
 CCCoreLib::ReferenceCloud * ccStichedImageViewer::removeHiddenPoints(CCCoreLib::GenericIndexedCloudPersist * theCloud, CCVector3 bbMin, CCVector3 bbMax, float leafSize)
@@ -1151,7 +1309,7 @@ CCCoreLib::ReferenceCloud * ccStichedImageViewer::removeHiddenPoints(CCCoreLib::
 
 	// Create a 2D matrix
 
-	//m_unrolledCloud->getBoundingBox(bbMin, bbMax);
+	//unrolledCloud->getBoundingBox(bbMin, bbMax);
 	int zDepthMatWidth = (int)ceil((bbMax.x - bbMin.x) / leafSize);
 	int zDepthMatHeight = (int)ceil((bbMax.y - bbMin.y) / leafSize);
 	std::vector<std::vector<int>> zDepthMat;
@@ -1214,3 +1372,13 @@ CCCoreLib::ReferenceCloud * ccStichedImageViewer::removeHiddenPoints(CCCoreLib::
 	}
 }
 
+void ccStichedImageViewer::rollingPoint(CCVector3 &point, float radius)
+{
+	float circumference = 2 * radius * M_PI;
+	float angle = point.x/(circumference/2) ;
+	float z = point.y;
+
+	point.x = -point.z * sin(angle);
+	point.y = -point.z * cos(angle);
+	point.z = z; 
+}

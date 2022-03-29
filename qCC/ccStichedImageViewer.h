@@ -82,6 +82,11 @@ public:
 
 	ccPointCloud* getCurrentPointCloud() { return m_currentPointCloud; }
 	ccPointCloud* getCurrentTrajectory() { return m_currentTrajectory; }
+	ccPointCloud* getUnrolledCloud() { return m_unrolledCloud; }
+	void setCurrentPointCloud(ccPointCloud* cloud) { m_currentPointCloud = cloud;
+													addComboBoxItem();}
+	void setCurrentTrajectory(ccPointCloud* cloud) { m_currentTrajectory =cloud ; }
+	void setUnrolledCloud(ccPointCloud* cloud) { m_unrolledCloud =cloud ; }
 
 	//! plan call
 	int getPlanSize();
@@ -103,6 +108,15 @@ public:
 
 	//! Change Step Size for node trajectory
 	void changeStepNode(int);
+
+	void actionUnroll(ccPointCloud* currentCloud, ccPointCloud* &outCloudUnrolled,
+		float radius, CCVector3 center, bool exportDistance,
+		CCCoreLib::GenericProgressCallback* progressCb =nullptr);
+
+	void cleanUnrollOctree(int octreeLevel, float radius, ccPointCloud* currentCloud, ccPointCloud* unrolledCloud,
+		ccPointCloud* &outCleanUnrolled, ccPointCloud* &outCloudClean, ccPointCloud* &outCloudRemaining,
+		CCCoreLib::GenericProgressCallback* progressCb = nullptr
+		);
 
 public slots:
 
@@ -209,18 +223,19 @@ private:
 	int closestPoseToPoint(const CCVector3* pt);
 	void chooseImageAction();
 	
-	// unroll point cloud
-	void unrollPointCloud(float radius, CCVector3 centerPt);
+	
 
 	// generate image unrolled
 	void generateImageUnroll(float zMax, float zMin, float color);
 
 	// Clean Cloud
-	ccPointCloud* cleanUnrollOctree(float octreeSize);
+	
 	CCCoreLib::ReferenceCloud* removeHiddenPoints(CCCoreLib::GenericIndexedCloudPersist * theCloud,CCVector3 bbMin, CCVector3 bbMax, float leafSize);
-	void actionCleanUnroll();
+	void unrollClick();
+	void rollingPoint(CCVector3 &point, float radius);
 
-	void ccStichedImageViewer::saveDxf(QImage img);
+	void saveDxf(QImage img);
+
 };
 
 #endif

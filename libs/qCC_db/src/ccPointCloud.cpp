@@ -3800,6 +3800,7 @@ ccPointCloud* ccPointCloud::unroll(	UnrollMode mode,
 	double startAngle_rad = CCCoreLib::DegreesToRadians( startAngle_deg );
 	double stopAngle_rad = CCCoreLib::DegreesToRadians( stopAngle_deg );
 	float circumference = params->radius * 2 * M_PI;
+	float radius = params->radius;
 
 	PointCoordinateType alpha_rad = 0;
 	PointCoordinateType sin_alpha = 0;
@@ -3836,6 +3837,7 @@ ccPointCloud* ccPointCloud::unroll(	UnrollMode mode,
 			Pout.x = xCylinder;
 			Pout.y = AP.z;
 			Pout.z = -depth;
+			delta = depth - radius;
 
 		}
 		break;
@@ -4018,11 +4020,10 @@ ccPointCloud* ccPointCloud::unroll(	UnrollMode mode,
 			if (sfIdx >= 0)
 			{
 				deviationSF = clone->getScalarField(sfIdx);
-				clone->setCurrentDisplayedScalarField(sfIdx);
+				//clone->setCurrentDisplayedScalarField(sfIdx);
 				clone->showSF(true);
 			}
 		}
-
 		//update the coordinates, the normals and the deviation SF
 		for (unsigned i = 0; i < duplicatedPoints.size(); ++i)
 		{

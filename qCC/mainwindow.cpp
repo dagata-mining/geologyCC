@@ -118,6 +118,7 @@
 #include "ccTracePolylineTool.h"
 #include "ccTranslationManager.h"
 #include "ccUnrollDlg.h"
+#include "ccUnrollCleanDlg.h"
 #include "ccVolumeCalcTool.h"
 #include "ccWaveformDialog.h"
 #include "ccEntitySelectionDlg.h"
@@ -344,7 +345,7 @@ MainWindow::~MainWindow()
 	{
 		getGLWindow(i)->setSceneDB(nullptr);
 	}
-	delete m_ccStichedImageViewer;
+
 
 	m_cpeDlg = nullptr;
 	m_gsTool = nullptr;
@@ -640,6 +641,7 @@ void MainWindow::connectActions()
 
 	//"Tools > Projection" menu
 	connect(m_UI->actionUnroll,						&QAction::triggered, this, &MainWindow::doActionUnroll);
+	connect(m_UI->actionUnrollClean,				&QAction::triggered, this, &MainWindow::doActionUnrollClean);
 	connect(m_UI->actionRasterize,					&QAction::triggered, this, &MainWindow::doActionRasterize);
 	connect(m_UI->actionConvertPolylinesToMesh,		&QAction::triggered, this, &MainWindow::doConvertPolylinesToMesh);
 	//connect(m_UI->actionCreateSurfaceBetweenTwoPolylines, &QAction::triggered, this, &MainWindow::doMeshTwoPolylines); //DGM: already connected to actionMeshTwoPolylines
@@ -5764,6 +5766,85 @@ void MainWindow::doActionUnroll()
 		}
 		updateUI();
 	}
+}
+
+void MainWindow::doActionUnrollClean()
+{
+	if (!m_ccStichedImageViewer)
+		return;
+	ccPointCloud* currentPointCloud = m_ccStichedImageViewer->getCurrentPointCloud();
+	ccHObject* parentFolder = currentPointCloud->getParent();
+	ccOctree::Shared cloudOctree = currentPointCloud->getOctree();
+	if (!cloudOctree)
+	{
+		cloudOctree = currentPointCloud->computeOctree();
+	}
+
+	if (!cloudOctree)
+	{
+		ccLog::Error("Couldn't compute octree!");
+		return;
+	}
+	CCVector3 bbMax;
+	CCVector3 bbMin;
+	cloudOctree->getBoundingBox(bbMin, bbMax);
+	float biggestSizeOctree = bbMax.x-bbMin.x;
+
+	ccUnrollCleanDlg unrollCleanDlg(biggestSizeOctree,this);
+	unrollCleanDlg.fromPersistentSettings();
+	if (!unrollCleanDlg.exec())
+		return;
+	
+	unrollCleanDlg.toPersistentSettings();
+
+
+	float radius = unrollCleanDlg.getRadius();
+	bool exportDistance = unrollCleanDlg.isDistanceEnabled();
+	bool clean = unrollCleanDlg.isCleanEnabled();
+	CCVector3 center = unrollCleanDlg.getAxisPosition();
+	int octreeLevel = unrollCleanDlg.getOctreeLevel();
+	
+
+	//let's rock unroll ;)
+	ccProgressDialog pDlg(true, this);
+	
+	ccPointCloud* unrolledCloud;
+	m_stichedImageViewer->actionUnroll(currentPointCloud,unrolledCloud, radius, center, true, &pDlg);
+	if (clean)
+	{
+		ccPointCloud* outCleanCloud;
+		ccPointCloud* outRemainingCloud;
+		ccPointCloud* outUnrolledCloud;
+
+		m_ccStichedImageViewer->cleanUnrollOctree(octreeLevel, radius, currentPointCloud, unrolledCloud, outUnrolledCloud, outCleanCloud, outRemainingCloud, &pDlg);
+		if (!outUnrolledCloud || !outCleanCloud || !outRemainingCloud)  return; 
+		
+		m_ccStichedImageViewer->setUnrolledCloud(unrolledCloud);
+		m_ccStichedImageViewer->setCurrentPointCloud(outCleanCloud);
+		
+		removeFromDB(currentPointCloud);
+		
+		outUnrolledCloud->setEnabled(false);
+		parentFolder->addChild(outUnrolledCloud);
+		outRemainingCloud->setEnabled(false);
+		parentFolder->addChild(outRemainingCloud);
+		outCleanCloud->setEnabled(true);
+		parentFolder->addChild(outCleanCloud);
+		
+		addToDB(outUnrolledCloud);
+		addToDB(outCleanCloud);
+		addToDB(outRemainingCloud);
+	}
+	else
+	{
+		unrolledCloud->setEnabled(false);
+		parentFolder->addChild(unrolledCloud);
+		addToDB(unrolledCloud);
+		m_ccStichedImageViewer->setUnrolledCloud(unrolledCloud);
+	}
+
+	updateUI();
+	
 }
 
 ccGLWindow* MainWindow::getActiveGLWindow()
