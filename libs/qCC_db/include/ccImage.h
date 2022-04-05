@@ -73,11 +73,18 @@ public:
 	//! Manually sets aspect ratio
 	void setAspectRatio(float ar) { m_aspectRatio = ar; }
 
+	//! Manually sets position box
+	void setPositionBox(ccBBox box) { m_positionBox = box; }
+	ccBBox getPositionBox() { return m_positionBox; }
+
 	//! Returns aspect ratio
 	inline float getAspectRatio() const { return m_aspectRatio; }
 
 	//! Sets associated sensor
 	void setAssociatedSensor(ccCameraSensor* sensor);
+
+	//! GetImage
+	QImage getImage(){ return m_image; }
 
 	//! Returns associated sensor
 	ccCameraSensor* getAssociatedSensor() { return m_associatedSensor; }
@@ -118,6 +125,9 @@ protected:
 
 	//! Associated sensor
 	ccCameraSensor* m_associatedSensor;
+
+	//! position
+	ccBBox m_positionBox;
 };
 
 #endif //CC_IMAGE_HEADER

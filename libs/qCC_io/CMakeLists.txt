@@ -12,7 +12,15 @@ option( OPTION_USE_DXF_LIB "Build with Ribbonsoft's DXF Lib (AutoCAD DXF files s
 if( ${OPTION_USE_DXF_LIB} )
 	set( DXF_LIB_DIR "extern/dxflib" CACHE PATH "DXF lib path" )
 	add_subdirectory( "${DXF_LIB_DIR}" )
-	target_link_libraries( ${PROJECT_NAME} dxflib )	
+	target_link_libraries( ${PROJECT_NAME} dxflib  )
+
+	#set( LIBREDWG_LIB_DIR "extern/libredwg" CACHE PATH "libredwg lib path" )
+	#add_subdirectory( "${LIBREDWG_LIB_DIR}" )
+	#target_link_libraries( ${PROJECT_NAME} libredwg )
+	find_package(yaml-cpp)
+	target_link_libraries( ${PROJECT_NAME} yaml-cpp  )
+
+	
 endif()
 
 option( OPTION_USE_SHAPE_LIB "Build with ShapeLib (SHP files support)" ON )
@@ -48,4 +56,5 @@ if ( BUILD_TESTING )
 endif()
 
 InstallSharedLibrary( TARGET ${PROJECT_NAME} )
+
 

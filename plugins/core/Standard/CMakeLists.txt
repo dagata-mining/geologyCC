@@ -14,6 +14,7 @@ add_subdirectory( qPoissonRecon )
 add_subdirectory( qRANSAC_SD )
 add_subdirectory( qSRA )
 add_subdirectory( qLibpointmatcher)
+#add_subdirectory( qDxfwr)
 
 #plugins integrated as submodules
 set( submod_plugins

@@ -156,7 +156,7 @@ struct DXFLIB_EXPORT DL_StyleData {
         italic(false) {
     }
 
-    bool operator==(const DL_StyleData& other) {
+    bool operator==(const DL_StyleData& other) const {
         // ignore lastHeightUsed:
         return (name==other.name &&
             flags==other.flags &&
@@ -1090,6 +1090,8 @@ struct DXFLIB_EXPORT DL_DimensionData {
      * Dimension scale (dimscale) style override.
      */
     double dimScale;
+    bool arrow1Flipped;
+    bool arrow2Flipped;
 };
 
 
@@ -1238,12 +1240,12 @@ struct DXFLIB_EXPORT DL_DimDiametricData {
 /**
  * Angular Dimension Data.
  */
-struct DXFLIB_EXPORT DL_DimAngularData {
+struct DXFLIB_EXPORT DL_DimAngular2LData {
     /**
      * Constructor.
      * Parameters: see member variables.
      */
-    DL_DimAngularData(double ddpx1, double ddpy1, double ddpz1,
+    DL_DimAngular2LData(double ddpx1, double ddpy1, double ddpz1,
                       double ddpx2, double ddpy2, double ddpz2,
                       double ddpx3, double ddpy3, double ddpz3,
                       double ddpx4, double ddpy4, double ddpz4) {
@@ -1320,21 +1322,21 @@ struct DXFLIB_EXPORT DL_DimAngular3PData {
         dpz3 = ddpz3;
     }
 
-    /*! X Coordinate of definition point 1. */
+    /*! X Coordinate of definition point 1 (extension line 1 end). */
     double dpx1;
     /*! Y Coordinate of definition point 1. */
     double dpy1;
     /*! Z Coordinate of definition point 1. */
     double dpz1;
 
-    /*! X Coordinate of definition point 2. */
+    /*! X Coordinate of definition point 2 (extension line 2 end). */
     double dpx2;
     /*! Y Coordinate of definition point 2. */
     double dpy2;
     /*! Z Coordinate of definition point 2. */
     double dpz2;
 
-    /*! X Coordinate of definition point 3. */
+    /*! X Coordinate of definition point 3 (center). */
     double dpx3;
     /*! Y Coordinate of definition point 3. */
     double dpy3;
@@ -1395,23 +1397,25 @@ struct DXFLIB_EXPORT DL_LeaderData {
      * Constructor.
      * Parameters: see member variables.
      */
-    DL_LeaderData(int lArrowHeadFlag,
-                  int lLeaderPathType,
-                  int lLeaderCreationFlag,
-                  int lHooklineDirectionFlag,
-                  int lHooklineFlag,
-                  double lTextAnnotationHeight,
-                  double lTextAnnotationWidth,
-                  int lNumber) {
+    DL_LeaderData(int arrowHeadFlag,
+                  int leaderPathType,
+                  int leaderCreationFlag,
+                  int hooklineDirectionFlag,
+                  int hooklineFlag,
+                  double textAnnotationHeight,
+                  double textAnnotationWidth,
+                  int number,
+                  double dimScale = 1.0) :
+        arrowHeadFlag(arrowHeadFlag),
+        leaderPathType(leaderPathType),
+        leaderCreationFlag(leaderCreationFlag),
+        hooklineDirectionFlag(hooklineDirectionFlag),
+        hooklineFlag(hooklineFlag),
+        textAnnotationHeight(textAnnotationHeight),
+        textAnnotationWidth(textAnnotationWidth),
+        number(number),
+        dimScale(dimScale) {
 
-        arrowHeadFlag = lArrowHeadFlag;
-        leaderPathType = lLeaderPathType;
-        leaderCreationFlag = lLeaderCreationFlag;
-        hooklineDirectionFlag = lHooklineDirectionFlag;
-        hooklineFlag = lHooklineFlag;
-        textAnnotationHeight = lTextAnnotationHeight;
-        textAnnotationWidth = lTextAnnotationWidth;
-        number = lNumber;
     }
 
     /*! Arrow head flag (71). */
@@ -1430,6 +1434,8 @@ struct DXFLIB_EXPORT DL_LeaderData {
     double textAnnotationWidth;
     /*! Number of vertices in leader (76). */
     int number;
+    /*! Dimension scale (dimscale) style override. */
+    double dimScale;
 };
 
 
@@ -1695,7 +1701,112 @@ struct DXFLIB_EXPORT DL_HatchEdgeData {
     //bool closed;
 };
 
+/**
+ * Image Definition
+ */
+struct DXFLIB_EXPORT DL_ImageDefinition {
+	/**
+	* Constructor.
+	* Parameters: see member variables.
+	*/
+	DL_ImageDefinition::DL_ImageDefinition(){};
+	DL_ImageDefinition(std::string& iFile, std::string& iHandle, int iWidth, int iHeight, double iHorizontalResolution, double  iVerticalResolution)
+	{
+		file = iFile;
+		handle = iHandle;
+		width = iWidth;
+		height = iHeight;
+		horizontalResolution = iHorizontalResolution;
+		verticalResolution = iVerticalResolution;
 
+	}
+	std::string file; 
+	std::string handle;
+	int width;
+	int height;
+	double horizontalResolution;
+	double verticalResolution;
+};
+
+struct DXFLIB_EXPORT DL_Image {
+	/**
+	 * Constructor.
+	 * Parameters: see member variables.
+	 */
+	DL_Image::DL_Image() {};
+	DL_Image(const std::string& iHandle, DL_ImageDefinition iImageDefinition,
+		double iipx, double iipy, double iipz,
+		double iux, double iuy, double iuz,
+		double ivx, double ivy, double ivz,
+		int ibrightness, int icontrast, int ifade) {
+		handle = iHandle;
+		ipx = iipx;
+		ipy = iipy;
+		ipz = iipz;
+		ux = iux;
+		uy = iuy;
+		uz = iuz;
+		vx = ivx;
+		vy = ivy;
+		vz = ivz;
+		brightness = ibrightness;
+		contrast = icontrast;
+		fade = ifade;
+		imageDefinition = iImageDefinition;
+	}
+
+	/*! Reference to the image file
+		(unique, used to refer to the image def object). */
+	std::string ref;
+	std::string handle;
+	std::string file;
+	/*! X Coordinate of insertion point. */
+	double ipx;
+	/*! Y Coordinate of insertion point. */
+	double ipy;
+	/*! Z Coordinate of insertion point. */
+	double ipz;
+	/*! X Coordinate of u vector along bottom of image. */
+	double ux;
+	/*! Y Coordinate of u vector along bottom of image. */
+	double uy;
+	/*! Z Coordinate of u vector along bottom of image. */
+	double uz;
+	/*! X Coordinate of v vector along left side of image. */
+	double vx;
+	/*! Y Coordinate of v vector along left side of image. */
+	double vy;
+	/*! Z Coordinate of v vector along left side of image. */
+	double vz;
+	/*! Brightness (0..100, default = 50). */
+	int brightness;
+	/*! Contrast (0..100, default = 50). */
+	int contrast;
+	/*! Fade (0..100, default = 0). */
+	int fade;
+	DL_ImageDefinition imageDefinition;
+};
+
+
+/**
+ * Image Definition
+ */
+struct DXFLIB_EXPORT DL_ImageDefinitionReactor {
+	/**
+	* Constructor.
+	* Parameters: see member variables.
+	*/
+	DL_ImageDefinitionReactor(std::string& iOwnerHandle, std::string& iHandle, DL_Image iImage)
+	{
+		ownerHandle = iOwnerHandle;
+		handle = iHandle;
+		image = iImage;
+
+	}
+	std::string handle;
+	DL_Image image;
+	std::string ownerHandle;
+};
 
 /**
  * Image Data.
@@ -1705,13 +1816,15 @@ struct DXFLIB_EXPORT DL_ImageData {
      * Constructor.
      * Parameters: see member variables.
      */
-    DL_ImageData(const std::string& iref,
+    DL_ImageData(const std::string& iref, const std::string& iHandle, const std::string& ifile,
                   double iipx, double iipy, double iipz,
                   double iux, double iuy, double iuz,
                   double ivx, double ivy, double ivz,
                   int iwidth, int iheight,
                   int ibrightness, int icontrast, int ifade) {
         ref = iref;
+        file = ifile;
+        handle = iHandle;
         ipx = iipx;
         ipy = iipy;
         ipz = iipz;
@@ -1728,9 +1841,31 @@ struct DXFLIB_EXPORT DL_ImageData {
         fade = ifade;
     }
 
+	/**
+ * Image Reactor Definition Data.Object
+ */
+	struct DXFLIB_EXPORT DL_ImageDefReactor {
+		/**
+		* Constructor.
+		* Parameters: see member variables.
+		*/
+		DL_ImageDefReactor(const std::string& iImageHandle, const std::string& iHandle, const std::string& iCodeName)
+		{
+			imageHandle = iImageHandle;
+			handle = iHandle;
+			codeName = iCodeName;
+		}
+		std::string imageHandle;
+		std::string codeName;
+		std::string handle;
+	};
+
+
     /*! Reference to the image file 
         (unique, used to refer to the image def object). */
     std::string ref;
+    std::string handle;
+    std::string file;
     /*! X Coordinate of insertion point. */
     double ipx;
     /*! Y Coordinate of insertion point. */
@@ -1772,9 +1907,11 @@ struct DXFLIB_EXPORT DL_ImageDefData {
      * Parameters: see member variables.
      */
     DL_ImageDefData(const std::string& iref,
-                 const std::string& ifile) {
+                 const std::string& ifile,
+				const std::string& iHandle) {
         ref = iref;
         file = ifile;
+		handle = iHandle;
     }
 
     /*! Reference to the image file 
@@ -1783,6 +1920,9 @@ struct DXFLIB_EXPORT DL_ImageDefData {
 
     /*! Image file */
     std::string file;
+
+	/*! Handle */
+	std::string handle;
 };
 
 

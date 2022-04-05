@@ -36,6 +36,8 @@ namespace Ui {
 #include <ccPickingListener.h>
 #include <ccViewportParameters.h>
 
+
+
 // Types of view
 enum CAM_VIEW_ORIENTATION {
 	CAM_ROOF_VIEW,	/**< Top view (eye: +Z) **/
@@ -130,6 +132,8 @@ protected:
 	
 private:
 
+	//Export .dxf file
+	void saveDxf();
 	
 	//  Export to CSV file ( X,Y,Z, dip. dip_dir)
 	bool planeToFile();
@@ -156,6 +160,8 @@ private:
 
 	// Unrolled Cloud
 	ccPointCloud* m_unrolledCloud;
+	CCVector3 m_center;
+	float m_radius;
 
 	// Current viewport
 	ccViewportParameters* m_viewport;
@@ -226,7 +232,7 @@ private:
 	
 
 	// generate image unrolled
-	void generateImageUnroll(float zMax, float zMin, float color);
+	ccImage* generateImageUnroll(float zMax, float zMin, float color);
 
 	// Clean Cloud
 	
@@ -234,8 +240,12 @@ private:
 	void unrollClick();
 	void rollingPoint(CCVector3 &point, float radius);
 
-	void saveDxf(QImage img);
+	// Generate linkers
+	void generateLinkers(std::vector<ccPolyline*> polylines, std::vector<ccImage*> images, 
+		std::vector<std::vector<CCVector3>> &linkersOut, float padding);
 
 };
+
+
 
 #endif

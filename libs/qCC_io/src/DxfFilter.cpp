@@ -17,6 +17,10 @@
 
 #include "DxfFilter.h"
 #include "FileIO.h"
+#include <direct.h>
+#include "QFileInfo.h"
+#include "QDir.h"
+#include "QImage.h"
 
 //CCCoreLib
 #include <ScalarField.h>
@@ -1016,6 +1020,9 @@ CC_FILE_ERROR DxfFilter::saveToFile(ccHObject* root, const QString& filename, co
 
 		//Writing the Objects Section
 		dxf.writeObjects(*dw);
+
+
+
 		dxf.writeObjectsEnd(*dw);
 
 		//Ending and Closing the File
@@ -1036,7 +1043,9 @@ CC_FILE_ERROR DxfFilter::saveToFile(ccHObject* root, const QString& filename, co
 #endif
 }
 
-CC_FILE_ERROR DxfFilter::saveToFileShaft(ccHObject* root, const QString& filename, const SaveParameters& parameters)
+void DxfFilter::saveToFileShaft( std::vector<ccPolyline*> cracks, std::vector<ccPolyline*> cracksLinkers,
+										std::vector<ccImage*> imagesBg, std::vector<ccImage*> imagesCrack,
+										const QString& filename)
 {
 #ifndef CC_DXF_SUPPORT
 
@@ -1045,109 +1054,104 @@ CC_FILE_ERROR DxfFilter::saveToFileShaft(ccHObject* root, const QString& filenam
 
 #else
 
-	if (!root || filename.isEmpty())
-		return CC_FERR_BAD_ARGUMENT;
+	if (filename.isEmpty())
+		return;
 
-	ccHObject::Container polylines;
 
-	root->filterChildren(polylines, false, CC_TYPES::POLY_LINE);
-	//if (root->isKindOf(CC_TYPES::POLY_LINE))
-		//polylines.push_back(root);
-	ccHObject::Container meshes;
-	root->filterChildren(meshes, true, CC_TYPES::MESH);
-	if (root->isKindOf(CC_TYPES::MESH))
-		meshes.push_back(root);
-	ccHObject::Container clouds;
-	root->filterChildren(clouds, true, CC_TYPES::POINT_CLOUD, true); //we don't want polylines!
-	if (root->isKindOf(CC_TYPES::POINT_CLOUD))
-		clouds.push_back(root);
+	//generate an image folder
+	QFileInfo fileInfo(filename);
+	QString fileBaseName = fileInfo.baseName();
+	QString absoluteFilePath = fileInfo.absolutePath();
+	QString folderImageAbsolutePath = absoluteFilePath + QString("/") + fileBaseName;
+	QDir dir(absoluteFilePath);
 
-	if (!clouds.empty())
+	dir.mkdir(fileBaseName);
+
+
+	bool exportCrackImage = true;
+	if (cracks.size() != cracksLinkers.size() ||
+		cracksLinkers.size() != imagesCrack.size() ||
+		imagesCrack.size() != cracks.size())
 	{
-		//remove the polylines vertices
-		ccHObject::Container realClouds;
-		try
-		{
-			for (ccHObject* cloud : clouds)
-			{
-				ccHObject* parent = cloud->getParent();
-				if (parent)
-				{
-					if (parent->isA(CC_TYPES::POLY_LINE))
-					{
-						if (std::find(polylines.begin(), polylines.end(), parent) != polylines.end())
-						{
-							//the parent is already in the 'polylines' set
-							continue;
-						}
-					}
-					else if (parent->isKindOf(CC_TYPES::MESH))
-					{
-						if (std::find(meshes.begin(), meshes.end(), parent) != meshes.end())
-						{
-							//the parent is already in the 'meshes' set
-							continue;
-						}
-					}
-				}
-
-				realClouds.push_back(cloud);
-			}
-			clouds = realClouds;
-		}
-		catch (const std::bad_alloc&)
-		{
-			return CC_FERR_NOT_ENOUGH_MEMORY;
-		}
+		exportCrackImage = false;
+		cracksLinkers.clear();
+		imagesCrack.clear();
 	}
+	
+	size_t crackCount = cracks.size();
+	size_t linkersCount = cracksLinkers.size();
+	size_t bgCount = imagesBg.size();
+	if (crackCount && bgCount == 0)
+		return;
 
-	//only polylines and meshes are handled for now
-	size_t polyCount = polylines.size();
-	size_t meshCount = meshes.size();
-	size_t cloudCount = clouds.size();
-	if (polyCount + meshCount + cloudCount == 0)
-		return CC_FERR_NO_SAVE;
+	// Create grid
+
 
 	//get global bounding box
-	CCVector3d bbMinCorner;
-	CCVector3d bbMaxCorner;
-	{
-		ccHObject::Container* containers[3] = { &polylines, &meshes, &clouds };
+	CCVector3 bbMinCorner(DBL_MAX, DBL_MAX,DBL_MAX);
+	CCVector3 bbMaxCorner(-DBL_MAX, -DBL_MAX, -DBL_MAX);
 
-		bool firstEntity = true;
-		for (int j = 0; j < 3; ++j)
+	// For cracks
+	for (int i = 0; i < crackCount; i++)
+	{
+		CCVector3 minC;
+		CCVector3 maxC;
+		cracks[i]->getBoundingBox(minC, maxC);
+		bbMinCorner.x = std::min(bbMinCorner.x, minC.x);
+		bbMinCorner.y = std::min(bbMinCorner.y, minC.y);
+		bbMinCorner.z = std::min(bbMinCorner.z, minC.z);
+		bbMaxCorner.x = std::max(bbMaxCorner.x, maxC.x);
+		bbMaxCorner.y = std::max(bbMaxCorner.y, maxC.y);
+		bbMaxCorner.z = std::max(bbMaxCorner.z, maxC.z);
+
+		if (exportCrackImage && cracksLinkers.size()>i &&  imagesCrack.size() > i)
 		{
-			for (size_t i = 0; i < containers[j]->size(); ++i)
-			{
-				CCVector3d minC;
-				CCVector3d maxC;
-				if (containers[j]->at(i)->getGlobalBB(minC, maxC))
-				{
-					//update global BB
-					if (firstEntity)
-					{
-						bbMinCorner = minC;
-						bbMaxCorner = maxC;
-						firstEntity = false;
-					}
-					else
-					{
-						bbMinCorner.x = std::min(bbMinCorner.x, minC.x);
-						bbMinCorner.y = std::min(bbMinCorner.y, minC.y);
-						bbMinCorner.z = std::min(bbMinCorner.z, minC.z);
-						bbMaxCorner.x = std::max(bbMaxCorner.x, maxC.x);
-						bbMaxCorner.y = std::max(bbMaxCorner.y, maxC.y);
-						bbMaxCorner.z = std::max(bbMaxCorner.z, maxC.z);
-					}
-				}
-			}
+			//Linkers
+			cracksLinkers[i]->getBoundingBox(minC, maxC);
+			bbMinCorner.x = std::min(bbMinCorner.x, minC.x);
+			bbMinCorner.y = std::min(bbMinCorner.y, minC.y);
+			bbMinCorner.z = std::min(bbMinCorner.z, minC.z);
+			bbMaxCorner.x = std::max(bbMaxCorner.x, maxC.x);
+			bbMaxCorner.y = std::max(bbMaxCorner.y, maxC.y);
+			bbMaxCorner.z = std::max(bbMaxCorner.z, maxC.z);
+
+			maxC = imagesCrack[i]->getPositionBox().maxCorner();
+			minC = imagesCrack[i]->getPositionBox().minCorner();
+			bbMinCorner.x = std::min(bbMinCorner.x, minC.x);
+			bbMinCorner.y = std::min(bbMinCorner.y, minC.y);
+			bbMinCorner.z = std::min(bbMinCorner.z, minC.z);
+			bbMaxCorner.x = std::max(bbMaxCorner.x, maxC.x);
+			bbMaxCorner.y = std::max(bbMaxCorner.y, maxC.y);
+			bbMaxCorner.z = std::max(bbMaxCorner.z, maxC.z);
 		}
 	}
+	// For imagesBg
+	for (int i = 0; i < bgCount; i++)
+	{
+		CCVector3 minC;
+		CCVector3 maxC;
+		maxC = imagesBg[i]->getPositionBox().maxCorner();
+		minC = imagesBg[i]->getPositionBox().minCorner();
+		bbMinCorner.x = std::min(bbMinCorner.x, minC.x);
+		bbMinCorner.y = std::min(bbMinCorner.y, minC.y);
+		bbMinCorner.z = std::min(bbMinCorner.z, minC.z);
+		bbMaxCorner.x = std::max(bbMaxCorner.x, maxC.x);
+		bbMaxCorner.y = std::max(bbMaxCorner.y, maxC.y);
+		bbMaxCorner.z = std::max(bbMaxCorner.z, maxC.z);
 
-	CCVector3d diag = bbMaxCorner - bbMinCorner;
+	}
+	
+	
+	CCVector3 diag = bbMaxCorner - bbMinCorner;
 	double baseSize = std::max(diag.x, diag.y);
 	double lineWidth = baseSize / 40.0;
 	double pageMargin = baseSize / 20.0;
+	ccLog::Error(QString("min corner (%1, %2, %3) max corner(%4, %5, %6)").arg(bbMinCorner.x)
+		.arg(bbMinCorner.y)
+		.arg(bbMinCorner.z)
+		.arg(bbMaxCorner.x)
+		.arg(bbMaxCorner.y)
+		.arg(bbMaxCorner.z));
 
 	if (CheckForSpecialChars(filename))
 	{
@@ -1158,7 +1162,7 @@ CC_FILE_ERROR DxfFilter::saveToFileShaft(ccHObject* root, const QString& filenam
 	DL_WriterA* dw = dxf.out(qPrintable(filename), DL_VERSION_R12);
 	if (!dw)
 	{
-		return CC_FERR_WRITING;
+		return;
 	}
 
 	CC_FILE_ERROR result = CC_FERR_NO_ERROR;
@@ -1209,10 +1213,13 @@ CC_FILE_ERROR DxfFilter::saveToFileShaft(ccHObject* root, const QString& filenam
 		}
 
 		//Writing the Layers
-		dw->tableLayers(static_cast<int>(polyCount + meshCount + cloudCount) + 1);
-		QStringList polyLayerNames;
-		QStringList meshLayerNames;
-		QStringList pointLayerNames;
+		int crackLayersCount = exportCrackImage ? crackCount + linkersCount : crackCount;
+		dw->tableLayers(static_cast<int>( crackLayersCount + bgCount + 1));
+		QStringList crackNames;
+		QStringList linkerNames;
+		QStringList bgNames;
+		QStringList linkerPaths;
+		QStringList bgPaths;
 		{
 			//default layer
 			dxf.writeLayer(*dw,
@@ -1225,58 +1232,65 @@ CC_FILE_ERROR DxfFilter::saveToFileShaft(ccHObject* root, const QString& filenam
 					1.0						// linetypeScale
 				));
 
-			//polylines layers
-			for (unsigned i = 0; i < polyCount; ++i)
+			//cracks layers
+			for (unsigned i = 0; i < crackCount; ++i)
 			{
 				//default layer name
 				//TODO: would be better to use the polyline name!
 				//but it can't be longer than 31 characters (R14 limit)
-				QString layerName = QString("POLYLINE_%1").arg(i + 1, 3, 10, QChar('0'));
+				QString layerName = QString("Crack_%1").arg(i + 1, 3, 10, QChar('0'));
 
-				polyLayerNames << layerName;
+				crackNames << layerName;
 				dxf.writeLayer(*dw,
 					DL_LayerData(qPrintable(layerName), 0), //DGM: warning, toStdString doesn't preserve "local" characters
 					DL_Attributes(
 						std::string(""),
-						DL_Codes::green,
+						DL_Codes::red,
 						static_cast<int>(lineWidth),
 						"CONTINUOUS",
 						1.0));
 			}
 
-			//mesh layers
-			for (unsigned j = 0; j < meshCount; ++j)
+			for (unsigned i = 0; i < linkersCount; ++i)
+			{
+				//default layer name
+				//TODO: would be better to use the polyline name!
+				//but it can't be longer than 31 characters (R14 limit)
+				QString layerName = QString("Image_Crack_%1").arg(i + 1, 3, 10, QChar('0'));
+				QString imgWriteFile = folderImageAbsolutePath + QString("/") + layerName + QString(".png");
+				QString imgRelativeFile =  QString(".\\") + fileBaseName + QString("\\") + layerName + QString(".png");
+				imagesCrack[i]->getImage().save(imgWriteFile);
+
+				linkerNames << layerName;
+				linkerPaths << imgRelativeFile;
+				dxf.writeLayer(*dw,
+					DL_LayerData(qPrintable(layerName), 0), //DGM: warning, toStdString doesn't preserve "local" characters
+					DL_Attributes(
+						std::string(""),
+						DL_Codes::black,
+						static_cast<int>(lineWidth),
+						"CONTINUOUS",
+						1.0));
+			}
+
+			//Bg layers
+			for (unsigned j = 0; j < bgCount; ++j)
 			{
 				//default layer name
 				//TODO: would be better to use the mesh name!
 				//but it can't be longer than 31 characters (R14 limit)
-				QString layerName = QString("MESH_%1").arg(j + 1, 3, 10, QChar('0'));
+				QString layerName = QString("BG_Image_%1").arg(j + 1, 3, 10, QChar('0'));
+				QString imgWriteFile = folderImageAbsolutePath + QString("/") + layerName + QString(".png");
+				QString imgRelativeFile = folderImageAbsolutePath + QString("/") + layerName + QString(".png");
+				imagesBg[j]->getImage().save(imgWriteFile);
 
-				meshLayerNames << layerName;
+				bgNames << layerName;
+				bgPaths << imgRelativeFile;
 				dxf.writeLayer(*dw,
 					DL_LayerData(qPrintable(layerName), 0), //DGM: warning, toStdString doesn't preserve "local" characters
 					DL_Attributes(
 						std::string(""),
-						DL_Codes::magenta,
-						static_cast<int>(lineWidth),
-						"CONTINUOUS",
-						1.0));
-			}
-
-			//clouds
-			for (unsigned j = 0; j < cloudCount; ++j)
-			{
-				//default layer name
-				//TODO: would be better to use the cloud name!
-				//but it can't be longer than 31 characters (R14 limit)
-				QString layerName = QString("CLOUD_%1").arg(j + 1, 3, 10, QChar('0'));
-
-				pointLayerNames << layerName;
-				dxf.writeLayer(*dw,
-					DL_LayerData(qPrintable(layerName), 0), //DGM: warning, toStdString doesn't preserve "local" characters
-					DL_Attributes(
-						std::string(""),
-						DL_Codes::magenta,
+						DL_Codes::black,
 						static_cast<int>(lineWidth),
 						"CONTINUOUS",
 						1.0));
@@ -1334,76 +1348,90 @@ CC_FILE_ERROR DxfFilter::saveToFileShaft(ccHObject* root, const QString& filenam
 		{
 			dw->sectionEntities();
 
-			//write polylines
-			for (unsigned i = 0; i < polyCount; ++i)
+			//write cracks
+			for (unsigned i = 0; i < crackCount; ++i)
 			{
-				const ccPolyline* poly = static_cast<ccPolyline*>(polylines[i]);
+				const ccPolyline* poly = cracks[i];
 				unsigned vertexCount = poly->size();
 				int flags = poly->isClosed() ? 1 : 0;
-				if (!poly->is2DMode())
-					flags |= 8; //3D polyline
+				//if (!poly->is2DMode())
+				//	flags |= 8; //3D polyline
 				dxf.writePolyline(*dw,
 					DL_PolylineData(static_cast<int>(vertexCount), 0, 0, flags),
-					DL_Attributes(qPrintable(polyLayerNames[i]), DL_Codes::bylayer, -1, "BYLAYER", 1.0)); //DGM: warning, toStdString doesn't preserve "local" characters
+					DL_Attributes(qPrintable(crackNames[i]), DL_Codes::bylayer, -1, "BYLAYER", 1.0)); //DGM: warning, toStdString doesn't preserve "local" characters
 
 				for (unsigned v = 0; v < vertexCount; ++v)
 				{
 					CCVector3 Pl;
 					poly->getPoint(v, Pl);
 					CCVector3d P = poly->toGlobal3d(Pl);
-					dxf.writeVertex(*dw, DL_VertexData(P.x, P.y, P.z));
+					dxf.writeVertex(*dw, DL_VertexData(P.x, P.y));
 				}
 
 				dxf.writePolylineEnd(*dw);
 			}
 
-			//write meshes
-			for (unsigned j = 0; j < meshCount; ++j)
+			for (unsigned i = 0; i < linkersCount; ++i)
 			{
-				ccGenericMesh* mesh = static_cast<ccGenericMesh*>(meshes[j]);
-				ccGenericPointCloud* vertices = mesh->getAssociatedCloud();
-				assert(vertices);
+				const ccPolyline* poly = cracksLinkers[i];
+				unsigned vertexCount = poly->size();
+				int flags = poly->isClosed() ? 1 : 0;
+				//if (!poly->is2DMode())
+				//	flags |= 8; //3D polyline
+				dxf.writePolyline(*dw,
+					DL_PolylineData(static_cast<int>(vertexCount), 0, 0, flags),
+					DL_Attributes(qPrintable(linkerNames[i]), DL_Codes::bylayer, -1, "BYLAYER", 1.0)); //DGM: warning, toStdString doesn't preserve "local" characters
 
-				unsigned triCount = mesh->size();
-				mesh->placeIteratorAtBeginning();
-				for (unsigned f = 0; f < triCount; ++f)
+				for (unsigned v = 0; v < vertexCount; ++v)
 				{
-					const CCCoreLib::GenericTriangle* tri = mesh->_getNextTriangle();
-					CCVector3d A = vertices->toGlobal3d(*tri->_getA());
-					CCVector3d B = vertices->toGlobal3d(*tri->_getB());
-					CCVector3d C = vertices->toGlobal3d(*tri->_getC());
-					dxf.write3dFace(*dw,
-						DL_3dFaceData(A.x, A.y, A.z,
-							B.x, B.y, B.z,
-							C.x, C.y, C.z,
-							C.x, C.y, C.z,
-							lineWidth),
-						DL_Attributes(qPrintable(meshLayerNames[j]), DL_Codes::bylayer, -1, "BYLAYER", 1.0)); //DGM: warning, toStdString doesn't preserve "local" characters
+					CCVector3 Pl;
+					poly->getPoint(v, Pl);
+					CCVector3d P = poly->toGlobal3d(Pl);
+					dxf.writeVertex(*dw, DL_VertexData(P.x, P.y));
 				}
+
+				dxf.writePolylineEnd(*dw);
 			}
-
-			//write points
-			for (unsigned i = 0; i < cloudCount; ++i)
-			{
-				const ccPointCloud* cloud = static_cast<ccPointCloud*>(clouds[i]);
-				unsigned pointCount = cloud->size();
-
-				for (unsigned j = 0; j < pointCount; ++j)
-				{
-					const CCVector3* P = cloud->getPoint(j);
-					CCVector3d Pg = cloud->toGlobal3d(*P);
-					dxf.writePoint(*dw,
-						DL_PointData(Pg.x, Pg.y, Pg.z),
-						DL_Attributes(qPrintable(pointLayerNames[i]), DL_Codes::bylayer, -1, "BYLAYER", 1.0)); //DGM: warning, toStdString doesn't preserve "local" characters
-				}
-			}
-
 			dw->sectionEnd();
 		}
 
-		//Writing the Objects Section
 		dxf.writeObjects(*dw);
+		for (unsigned i = 0; i < bgCount; ++i)
+		{
+			int width = imagesBg[i]->getW();
+			int height = imagesBg[i]->getH();
+			CCVector3 maxC = imagesBg[i]->getPositionBox().maxCorner();
+			CCVector3 minC = imagesBg[i]->getPositionBox().minCorner();
+			float ux = (maxC.x - minC.x) / width;
+			ccLog::Error(bgPaths[i]);
+				
+			
+			//int handle = dxf.writeImage(*dw,DL_ImageData(std::string(""), 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 10.0, 0.0, 3141, 7866, 50, 50, 0),
+			//	DL_Attributes(qPrintable(bgNames[i]), DL_Codes::bylayer, -1, "BYLAYER", 1.0));
+			//dxf.writeImageDef(*dw, handle, DL_ImageData((const char*)QString("C:/Users/Asus/Documents/shaft/BG_Image_001.png").toLocal8Bit(), 0.0, 0.0, 0.0 , 10.0, 0.0, 0.0, 0.0, 10.0, 0.0, 3141, 7866, 50, 50, 0));
+		}
+
+		for (unsigned i = 0; i < linkersCount; ++i)
+		{
+			int width = imagesCrack[i]->getW();
+			int height = imagesCrack[i]->getH();
+			CCVector3 maxC = imagesCrack[i]->getPositionBox().maxCorner();
+			CCVector3 minC = imagesCrack[i]->getPositionBox().minCorner();
+			float ux = (maxC.x - minC.x) / width;
+
+			//dxf.writeImage(*dw,
+				//DL_ImageData("", minC.x, minC.y, 0, 1, 0, 0, 0, 1, 0, width, height, 50, 50, 0),
+				//DL_PolylineData(static_cast<int>(vertexCount), 0, 0, flags),
+			//	DL_Attributes(qPrintable(linkerNames[i]), DL_Codes::bylayer, -1, "BYLAYER", 1.0)); //DGM: warning, toStdString doesn't preserve "local" characters
+				
+		}
 		dxf.writeObjectsEnd(*dw);
+			
+		
+
+		//Writing the Objects Section
+		
+		
 
 		//Ending and Closing the File
 		dw->dxfEOF();
@@ -1418,11 +1446,170 @@ CC_FILE_ERROR DxfFilter::saveToFileShaft(ccHObject* root, const QString& filenam
 	delete dw;
 	dw = nullptr;
 
-	return result;
+	return ;
 
 #endif
 }
 
+void DxfFilter::saveToFileShaftTest()
+{
+#ifndef CC_DXF_SUPPORT
+
+	ccLog::Error("[DXF] DXF format not supported! Check compilation parameters!");
+	return CC_FERR_CONSOLE_ERROR;
+
+#else
+	//std::string reactorHandle = "2C3";
+	//std::string imageDefHandle = "E4F";
+	DL_Dxf dxf;
+	DL_WriterA* dw = dxf.out("C:/Users/Asus/Documents/shaft.dxf", DL_VERSION_2000);
+
+	// section header:
+	dxf.writeHeader(*dw);
+	dw->sectionEnd();
+
+	dw->sectionClasses();
+	dxf.WriteRasterVariablesClass(*dw);
+	dxf.WriteImageDefClass(*dw);
+	dxf.WriteImageDefReactorClass(*dw);
+	dxf.WriteImageClass(*dw);
+	dw->sectionEnd();
+
+	// section tables:
+	dw->sectionTables();
+
+	// VPORT:
+	dxf.writeVPort(*dw);
+
+	// LTYPE:
+	dw->tableLinetypes(1);
+	dxf.writeLinetype(*dw, DL_LinetypeData("CONTINUOUS", "Continuous", 0, 0, 0.0));
+	dxf.writeLinetype(*dw, DL_LinetypeData("BYLAYER", "", 0, 0, 0.0));
+	dxf.writeLinetype(*dw, DL_LinetypeData("BYBLOCK", "", 0, 0, 0.0));
+	dw->tableEnd();
+
+	// LAYER:
+	dw->tableLayers(1);
+	dxf.writeLayer(
+		*dw,
+		DL_LayerData("0", 0),
+		DL_Attributes("", 1, 0x00ff0000, 15, "CONTINUOUS")
+	);
+	dw->tableEnd();
+
+	// STYLE:
+	dw->tableStyle(1);
+	DL_StyleData style("Standard", 0, 0.0, 1.0, 0.0, 0, 2.5, "txt", "");
+	style.bold = false;
+	style.italic = false;
+	dxf.writeStyle(*dw, style);
+	dw->tableEnd();
+
+	// VIEW:
+	dxf.writeView(*dw);
+
+	// UCS:
+	dxf.writeUcs(*dw);
+
+	// APPID:
+	dw->tableAppid(1);
+	dxf.writeAppid(*dw, "ACAD");
+	dw->tableEnd();
+
+	// DIMSTYLE:
+	dxf.writeDimStyle(*dw, 2.5, 0.625, 0.625, 0.625, 2.5);
+
+	// BLOCK_RECORD:
+	dxf.writeBlockRecord(*dw);
+	dw->tableEnd();
+
+	dw->sectionEnd();
+
+	// BLOCK:
+	dw->sectionBlocks();
+	dxf.writeBlock(*dw, DL_BlockData("*Model_Space", 0, 0.0, 0.0, 0.0));
+	dxf.writeEndBlock(*dw, "*Model_Space");
+	dxf.writeBlock(*dw, DL_BlockData("*Paper_Space", 0, 0.0, 0.0, 0.0));
+	dxf.writeEndBlock(*dw, "*Paper_Space");
+	dxf.writeBlock(*dw, DL_BlockData("*Paper_Space0", 0, 0.0, 0.0, 0.0));
+	dxf.writeEndBlock(*dw, "*Paper_Space0");
+	dw->sectionEnd();
+
+
+	// ENTITIES:
+	dw->sectionEntities();
+
+	DL_Attributes attributes("0", 256, -1, -1, "BYLAYER");
+
+	// LINE:
+	DL_LineData lineData(10, 5, 0, 30, 5, 0);
+	dxf.writeLine(*dw, lineData, attributes);
+
+	// DIMENSION:
+	DL_DimensionData dimData(10.0,                  // def point (dimension line pos)
+		50.0,
+		0.0,
+		0,                     // text pos (irrelevant if flag 0x80 (128) set for type
+		0,
+		0.0,
+		0x1,                   // type: aligned with auto text pos (0x80 NOT set)
+		8,                     // attachment point: bottom center
+		2,                     // line spacing: exact
+		1.0,                   // line spacing factor
+		"",                    // text
+		"Standard",            // style
+		0.0,                   // text angle
+		1.0,                   // linear factor
+		1.0);                  // dim scale
+
+	DL_DimAlignedData dimAlignedData(10.0,          // extension point 1
+		5.0,
+		0.0,
+		30.0,          // extension point 2
+		5.0,
+		0.0);
+
+	dxf.writeDimAligned(*dw, dimData, dimAlignedData, attributes);
+
+	
+
+	std::string imageHandle = "2C2";
+	std::string imageDefHandle = "2C3";
+	std::string ownerHandle = "2C4";
+	std::string reactorHandle = "2C5";
+	std::string file = "C:/Users/Asus/Documents/shaft/BG_Image_001.png";
+	QImage img("C:/Users/Asus/Documents/shaft/BG_Image_001.png");
+	int width = img.width();
+	int height = img.height();
+	double horizontalResolution = 0.001;
+	double verticalResolution = 0.001;
+	
+	DL_ImageDefinition imageDef(file, imageDefHandle, width, height, horizontalResolution, verticalResolution);
+	DL_Image image(imageHandle, imageDef, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 50, 50, 0);
+	DL_ImageDefinitionReactor imageDefReactor(ownerHandle, reactorHandle, image);
+	
+	ccLog::Error(QString("w: %1 , h:%2").arg(width).arg(height));
+	dxf.writeImage(*dw, image, imageDefReactor, attributes);
+
+	// end section ENTITIES:
+	dw->sectionEnd();
+
+
+	dxf.writeObjects(*dw);
+	
+	dxf.writeImageDefReactor(*dw, imageDefReactor);
+	dxf.writeImageDef(*dw, imageDefReactor);
+	dxf.writeObjectsEnd(*dw);
+
+	dw->dxfEOF();
+	dw->close();
+	delete dw;
+
+	return ;
+
+
+#endif
+}
 
 CC_FILE_ERROR DxfFilter::loadFile(const QString& filename, ccHObject& container, LoadParameters& parameters)
 {

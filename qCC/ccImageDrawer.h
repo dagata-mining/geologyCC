@@ -155,7 +155,9 @@ public:
 	int getNodeId() { return m_nodeId; }
 	void setNodeId(int nodeId) { m_nodeId = nodeId; }
 
-	
+	// Polyline Object
+	ccHObject* getPolylineObject() { return m_polylineObject; }
+
 	// Increase Image Brightness
 	void bright(int);
 	// Increase Image Contrast

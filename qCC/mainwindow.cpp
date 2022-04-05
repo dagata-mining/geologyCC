@@ -5809,7 +5809,7 @@ void MainWindow::doActionUnrollClean()
 	ccProgressDialog pDlg(true, this);
 	
 	ccPointCloud* unrolledCloud;
-	m_stichedImageViewer->actionUnroll(currentPointCloud,unrolledCloud, radius, center, true, &pDlg);
+	m_stichedImageViewer->actionUnroll(currentPointCloud,unrolledCloud, radius, center, exportDistance, &pDlg);
 	if (clean)
 	{
 		ccPointCloud* outCleanCloud;

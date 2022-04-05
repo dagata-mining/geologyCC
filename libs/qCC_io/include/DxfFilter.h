@@ -19,6 +19,8 @@
 #define CC_DXF_FILTER_HEADER
 
 #include "FileIOFilter.h"
+#include "ccImage.h"
+#include "ccPolyline.h"
 
 //! Autocad DXF file I/O filter
 class QCC_IO_LIB_API DxfFilter : public FileIOFilter
@@ -31,7 +33,11 @@ public:
 
 	bool canSave(CC_CLASS_ENUM type, bool& multiple, bool& exclusive) const override;
 	CC_FILE_ERROR saveToFile(ccHObject* entity, const QString& filename, const SaveParameters& parameters) override;
-	CC_FILE_ERROR saveToFileShaft(ccHObject* root, const QString& filename, const SaveParameters& parameters);
+
+	void saveToFileShaft( std::vector<ccPolyline*> cracks, std::vector<ccPolyline*> cracksLinkers,
+		std::vector<ccImage*> imagesBg, std::vector<ccImage*> imagesCrack,
+		const QString& filename);
+	void saveToFileShaftTest();
 };
 
 #endif //CC_DXF_FILTER_HEADER
