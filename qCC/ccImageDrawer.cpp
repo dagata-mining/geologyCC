@@ -283,6 +283,7 @@ void ccImageDrawer::initPolyObject() {
 	ccPointCloud* pc = new ccPointCloud("vertices", static_cast<unsigned>(ReservedIDs::INTERACTIVE_SEGMENTATION_TOOL_POLYLINE_VERTICES));
 	m_polylineObject = new ccPolyline(pc, static_cast<unsigned>(ReservedIDs::INTERACTIVE_SEGMENTATION_TOOL_POLYLINE));
 	m_polylineObject->setName("Dxf Files");
+	m_polylineObject->setLocked(true);
 	MainWindow::TheInstance()->addToDB(m_polylineObject);
 }
 
@@ -1080,7 +1081,7 @@ void ccImageDrawer::sectionToPoly(float degPrecision)
 
 }
 
-void ccImageDrawer::segmentToPoly(float degPrecision)
+void ccImageDrawer::segmentToPoly(float degPrecision, bool exportImage)
 {
 	// Get the point cloud of the biggest rectangle based on the polyline
 	ccGLWindow* glWindow = MainWindow::GetActiveGLWindow();
@@ -1160,11 +1161,21 @@ void ccImageDrawer::segmentToPoly(float degPrecision)
 			minY = m_polygon.point(i).y();
 		}
 	}
+
+	float paddingPx = 100;
+	float maxXImg = maxX + paddingPx > (float)m_image.width() ? (float)m_image.width() : maxX + paddingPx;
+	float maxYImg = maxY + paddingPx > (float)m_image.height() ? (float)m_image.height() : maxY + paddingPx;
+	float minXImg = minX - paddingPx < 0 ? 0 : minX - paddingPx;
+	float minYImg = minY - paddingPx < 0 ? 0 : minY - paddingPx;
+
 	maxX = maxX + pxPrecision > (float)m_image.width() ? (float)m_image.width() : maxX + pxPrecision;
 	maxY = maxY + pxPrecision > (float)m_image.height() ? (float)m_image.height() : maxY + pxPrecision;
 	minX = minX - pxPrecision < 0 ? 0 : minX - pxPrecision;
 	minY = minY - pxPrecision < 0 ? 0 : minY - pxPrecision;
 
+
+	//generate an image of the crack 
+	
 	m_polyVertices->clear();
 	m_segmentationPoly->clear();
 
@@ -1284,21 +1295,39 @@ void ccImageDrawer::segmentToPoly(float degPrecision)
 
 	//Adding polyline to file
 	//ccHObject* finalObject = static_cast<ccHObject*>(finalPolyline);
-	finalPolyline->setEnabled(true);
-	finalPolyline->setName("Polyline");
+	
 	if (!m_polylineObject)
 	{
 		initPolyObject();
 	}
+	finalPolyline->setEnabled(true);
+	ccHObject::Container filteredChildren;
+	ccHObject::Container filteredChildrenImg;
+	int nbrId = m_polylineObject->filterChildren(filteredChildren, true, CC_TYPES::POLY_LINE, false);
+	int nbrImg = m_polylineObject->filterChildren(filteredChildrenImg, true, CC_TYPES::IMAGE, false);
 	m_polylineObject->addChild(finalPolyline);
 	MainWindow::TheInstance()->addToDB(finalPolyline);
+	CCVector3 bbMin, bbMax;
+	finalPolyline->getBoundingBox(bbMin, bbMax);
+	finalPolyline->setName(QString("PolylineCrack_%1m-%2").arg(nbrId).arg((int)bbMax.z));
+	if (exportImage)
+	{
+		// Verify is image with same name, if yes remove
+		for (int i = 0; i < nbrImg; i++)
+		{
+			if (filteredChildrenImg[i]->getName() == QString("ImageCrack_y%1m-%2").arg(nbrId).arg((int)bbMax.z))
+			{
+				MainWindow::TheInstance()->removeFromDB(filteredChildrenImg[i]);
+			}
+		}
+		ccImage* polyImage(new ccImage());
+		QRect rect(QPoint(minXImg, minYImg), QPoint(maxXImg, maxYImg));
+		QImage croppedImage = m_image.toImage().copy(rect);
+		polyImage->setData(croppedImage);
+		polyImage->setName(QString("ImageCrack_y%1m-%2").arg(nbrId).arg((int)bbMax.z));
+		m_polylineObject->addChild(polyImage);
+	}
 	
-	
-
-	glWindow->redraw();
-	glWindow->refresh();
-
-
 	return;
 
 }

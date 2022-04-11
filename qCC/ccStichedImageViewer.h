@@ -81,6 +81,11 @@ public:
 
 	ccImageDrawer* m_imageDrawer;
 	Ui::ImageStichedViewer *m_ui;
+	void setCenter(CCVector3 center) { m_center = center; }
+	void setRadius(float radius) { m_radius = radius; }
+
+	// Set 
+	
 
 	ccPointCloud* getCurrentPointCloud() { return m_currentPointCloud; }
 	ccPointCloud* getCurrentTrajectory() { return m_currentTrajectory; }
@@ -241,8 +246,21 @@ private:
 	void rollingPoint(CCVector3 &point, float radius);
 
 	// Generate linkers
-	void generateLinkers(std::vector<ccPolyline*> polylines, std::vector<ccImage*> images, 
-		std::vector<std::vector<CCVector3>> &linkersOut, float padding);
+	void generateLinkers(std::vector<std::pair<ccPolyline*, ccImage*>> &crackPairs, std::vector<std::vector<CCVector3>> &linkersOut,
+		float paddingShaft = 1.5, float paddingBetween = 0.1);
+
+	//Permutation
+	bool isBoxCrossing(ccBBox a, ccBBox b, float padding);
+	
+	template <typename T, typename Compare>
+	std::vector<std::size_t> sort_permutation(
+		const std::vector<T>& vec,
+		Compare& compare);
+
+	template <typename T>
+	std::vector<T> apply_permutation(
+		const std::vector<T>& vec,
+		const std::vector<std::size_t>& p);
 
 };
 

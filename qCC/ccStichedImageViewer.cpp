@@ -17,13 +17,8 @@
 
 #include "ccStichedImageViewer.h"
 
-#include "yaml-cpp/node/node.h"
-#include "yaml-cpp/emitter.h"
-#include "yaml-cpp/node/convert.h"
-#include "yaml-cpp/node/detail/impl.h"
-#include "yaml-cpp/node/emit.h"
-#include "yaml-cpp/node/impl.h"
-#include "yaml-cpp/node/iterator.h"
+
+
 //Ui
 #include <ui_stichedImageViewerDlg.h>
 //Local
@@ -63,9 +58,14 @@
 #include <QFileDialog>
 #include <QVector3D>
 #include <QQuaternion>
+#include <QJsonObject.h>
+#include <QJsonArray.h>
+#include <QJsonDocument.h>
+
 
 //system
 #include <cassert>
+#include <fstream>
 #ifdef QT_DEBUG
 #include <iostream>
 #endif
@@ -775,8 +775,8 @@ void ccStichedImageViewer::setSpinShift()
 //}	
 void ccStichedImageViewer::changeCamView(CC_VIEW_ORIENTATION orientation)
 {
-	DxfFilter dxf;
-	dxf.saveToFileShaftTest();
+	//DxfFilter dxf;
+	//dxf.saveToFileShaftTest();
 	if (!m_currentPointCloud || !m_currentTrajectory) { return; }
 
 	m_orientation = orientation;
@@ -803,7 +803,7 @@ void ccStichedImageViewer::changeCamView(CC_VIEW_ORIENTATION orientation)
 	{
 	case CC_FRONT_VIEW:
 	{
-		//saveDxf();
+		saveDxf();
 		
 		m_shiftVector = { 0, -1, 0 };
 		m_up = { 0,0,1 };
@@ -907,8 +907,8 @@ ccImage* ccStichedImageViewer::generateImageUnroll(float zMax, float zMin, float
 	double targetHeight = (bbMax-bbMin).y;
 	double targetRatio = targetHeight/targetWidth;
 	double windowRatio = windowHeight / windowWidth;
-	ccLog::Error(QString("Target Height: %1 ratioTarget: %2 ratioWindow: %3").arg(targetHeight).arg(targetRatio).arg(windowRatio));
-
+	//ccLog::Error(QString("Target Height: %1 ratioTarget: %2 ratioWindow: %3").arg(targetHeight).arg(targetRatio).arg(windowRatio));
+	
 	//Center image
 	double focalDistance;
 	CCVector3d eye(0, 0, 1);
@@ -916,6 +916,7 @@ ccImage* ccStichedImageViewer::generateImageUnroll(float zMax, float zMin, float
 	CCVector3d top(0, 1, 0);
 	imageViewport.viewMat = ccGLMatrixd::FromViewDirAndUpDir(center - eye, top);
 	CCVector3d P((bbMax + bbMin).x / 2, (bbMax + bbMin).y / 2, 0);
+	ccLog::Print(QString("Center Camera %1, %2, %3").arg(P.x).arg(P.y).arg(P.z));
 	imageViewport.setCameraCenter(P, false);
 
 
@@ -923,7 +924,6 @@ ccImage* ccStichedImageViewer::generateImageUnroll(float zMax, float zMin, float
 	{
 		//Optimizing Height
 		double zoom = targetHeight * 200 / windowHeight;
-		ccLog::Error(QString::number(zoom));
 
 		if (windowHeight < windowWidth)
 		{
@@ -944,8 +944,21 @@ ccImage* ccStichedImageViewer::generateImageUnroll(float zMax, float zMin, float
 		win->setViewportParameters(imageViewport);
 		win->redraw();
 		
-		image = win->renderToImage(zoom, true, false, true);
-		//ccLog::Error(QString("Image Height: %1 focal: %2").arg(image.height()).arg(focalDistance));
+		while (image.isNull())
+		{
+			image = win->renderToImage(zoom, true, false, true);
+			if (zoom < 1)
+			{
+				ccLog::Error("Could not export Bg Image, due to momory shortage");
+				return nullptr;
+			}
+			if (image.isNull())
+			{
+				zoom -= 1;
+			}
+		}
+		ccLog::Print(QString("Image created at zoom of %1").arg(zoom));
+
 		// Image should be adapted to the height
 		qreal imgHeight = image.height();
 		qreal theoricalWidth = imgHeight / targetRatio;
@@ -957,7 +970,6 @@ ccImage* ccStichedImageViewer::generateImageUnroll(float zMax, float zMin, float
 	{
 		//Optimizing Width
 		double zoom = targetWidth * 200 / windowWidth;
-		ccLog::Error(QString::number(zoom));
 
 		if (windowHeight > windowWidth)
 		{
@@ -970,8 +982,22 @@ ccImage* ccStichedImageViewer::generateImageUnroll(float zMax, float zMin, float
 		win->setViewportParameters(imageViewport);
 		win->redraw();
 		
-		image = win->renderToImage(zoom, true, false, true);
-
+		while (image.isNull())
+		{
+			image = win->renderToImage(zoom, true, false, true);
+			zoom -= 1;
+			if (zoom < 1)
+			{
+				ccLog::Error("Could not export Bg Image, due to momory shortage");
+				return nullptr;
+			}
+			if (image.isNull())
+			{
+				zoom -= 1;
+			}
+		}
+		ccLog::Print(QString("Image created at zoom of %1").arg(zoom));
+		
 		// Image should be adapted to the width
 		qreal imgWidth = image.width();
 		qreal theoricalHeight = imgWidth * targetRatio;
@@ -1018,8 +1044,6 @@ void ccStichedImageViewer::actionUnroll(ccPointCloud* currentCloud, ccPointCloud
 	params.radius = radius;
 
 	outCloudUnrolled = currentCloud->unroll(ccPointCloud::UnrollMode::CYLINDER, &params, exportDistance, 0, 360,progressCb);
-	m_center = center;
-	m_radius = radius;
 	// Apply sf to oldCloud
 	if (exportDistance)
 	{
@@ -1045,8 +1069,9 @@ void ccStichedImageViewer::actionUnroll(ccPointCloud* currentCloud, ccPointCloud
 			sfU->setColorScale(ccColorScalesManager::GetDefaultScale(ccColorScalesManager::CONVERGENCE));
 			sfC->setColorScale(ccColorScalesManager::GetDefaultScale(ccColorScalesManager::CONVERGENCE));
 		}
+		
 	}
-
+	return;
 }
 
 void ccStichedImageViewer::cleanUnrollOctree(int octreeLevel, float radius, ccPointCloud* currentCloud , ccPointCloud* unrolledCloud,
@@ -1426,7 +1451,7 @@ void ccStichedImageViewer::saveDxf()
 
 	currentPath = QFileInfo(selectedFile).absolutePath();
 	QString currentName = QFileInfo(selectedFile).baseName();
-	QString yamlFilePath = currentPath + QString("/") + currentName + QString(".yaml");
+	QString jsonFilePath = currentPath + QString("/") + currentName + QString(".json");
 
 	settings.setValue(ccPS::CurrentPath(), currentPath);
 
@@ -1445,69 +1470,128 @@ void ccStichedImageViewer::saveDxf()
 	{
 		m_unrolledCloud->setCurrentDisplayedScalarField(i);
 		ccImage* img = generateImageUnroll(0, 0, 0);
-		bgImages.push_back(img);
+		if (img)
+		{
+			bgImages.push_back(img);
+		}
 	}
 	m_unrolledCloud->setEnabled(false);
 	m_unrolledCloud->setVisible(false);
 	root->toggleVisibility_recursive();
 
 	// Query to get all crack images
-	std::vector<ccImage*> crackImages;
-	//Query to get all polylines and transform to 2d
-	std::vector<ccPolyline*> cracks;
+	ccHObject::Container filteredChildrenPolyline, filteredChildrenImage;
+	int polyObjSize = m_imageDrawer->getPolylineObject()->filterChildren(filteredChildrenPolyline, true, CC_TYPES::POLY_LINE, true);
+	int imageObjSize = m_imageDrawer->getPolylineObject()->filterChildren(filteredChildrenImage, true, CC_TYPES::IMAGE, true);
+	std::vector<std::pair<ccPolyline*, ccImage*>> crackPairs;
+
+	for (int i = 0; i < polyObjSize; i++)
+	{
+		ccImage* img = nullptr;
+		ccPolyline* poly = static_cast<ccPolyline*>(filteredChildrenPolyline[i]);
+		QString polyName = poly->getName();
+		QString polyId = polyName.split("_").takeLast();
+		bool polyHasImg = false;
+		
+		for (int j = 0; j < imageObjSize; j++)
+		{
+			QString imgName = filteredChildrenImage[j]->getName();
+			QString imgId = imgName.split("_").takeLast();
+			if (imgId == polyId)
+			{
+				polyHasImg = true;
+				img = static_cast<ccImage*>(filteredChildrenImage[j]);
+				break;
+			}
+		}
+		crackPairs.push_back(std::make_pair(poly, img));
+	}
+	if (crackPairs.empty()) 
+	{
+		ccLog::Error("No cracks available, saving to .dxf cancelled");
+		return;
+	}
+
+
+
+	// Unroll cracks
+	float radius = m_radius;
+	float circumference = 2 * M_PI * radius;
+	CCVector3 center = m_center;;
+	
+	for (int i = 0; i < crackPairs.size(); i++)
+	{
+		
+		ccPointCloud* crackCloud(new ccPointCloud); 
+		crackCloud->reserve(crackPairs[i].first->size());
+		ccPolyline* unrolledCrack(new ccPolyline(crackCloud));
+		for (int j = 0; j < crackPairs[i].first->size(); j++)
+		{
+			const CCVector3 *pt = crackPairs[i].first->getPoint(j);
+			CCVector3 transPt = *pt - center;
+			float depth = sqrt(transPt.x * transPt.x + transPt.y *transPt.y);
+			//ProjectOnCylinder(AP, dim, params->radius, delta, longitude_rad);
+			float angle = -atan2(transPt.x, transPt.y);
+			float xCylinder = (angle / M_PI) * (circumference / 2);
+			
+			transPt.x = xCylinder; //x
+			transPt.y = transPt.z;//y
+			transPt.z = -depth;//z
+			crackCloud->addPoint(transPt);
+			unrolledCrack->addPointIndex(j);
+			//ccLog::Print(QString("unrolled crack: %1, %2, %3").arg(transPt.x).arg(transPt.y).arg(transPt.z));
+		}
+		
+		crackPairs[i].first = unrolledCrack;
+	}
+
+
 
 	// sorting the vectors
 	std::vector<float> depthSort;
-	auto p = sort_permutation(depthSort,
-		[](float const& a, float const& b) { a > b; });
-	for (int i = 0; i < cracks.size(); i++)
+	for (int i = 0; i < crackPairs.size(); i++)
 	{
-		CCVector3 ccMax;
-		CCVector3 ccMin;
-		cracks[i]->getBoundingBox(ccMax, ccMin);
-		depthSort.push_back(ccMax.z);
+		CCVector3 ccMax = crackPairs[i].first->getBB_recursive().maxCorner();
+		depthSort.push_back(ccMax.y);
 		
 	}
-	if (crackImages.size() == cracks.size())
-	{
-		//Sort cracks and crack linkers
-		cracks = apply_permutation(cracks, p);
-		crackImages = apply_permutation(crackImages, p);
-		depthSort = apply_permutation(depthSort, p);
-	}
-	else
-	{
-		// Sort only cracks
-		cracks = apply_permutation(cracks, p);
-		depthSort = apply_permutation(depthSort, p);
+	auto p = sort_permutation(depthSort,
+		[](float const& a, float const& b) { return a > b; });
 
-	}
+
+	//Sort cracks and crack images
+	crackPairs = apply_permutation(crackPairs, p);
+	depthSort = apply_permutation(depthSort, p);
+
+	// Creating linkers and positionning crack images
+	std::vector<std::vector<CCVector3>> linkers;
+	ccStichedImageViewer::generateLinkers(crackPairs, linkers, 1.0, 0.1);
+
+
 	
-
-
-	// Generate a yaml file
-	YAML::Node node;
 	//Layers
-	YAML::Node layersNode;
+	QJsonObject layersNode;
+	
 	// Add both the bg images and the cracks as layers
-	std::vector<std::string> layersBgImages;
+	QStringList layersBgImages;
 	for (int i = 0; i < bgImages.size(); i++)
 	{
-		std::string  layerName = "shaftImage_" + std::to_string(i);
+		QString  layerName = QString("shaftImage_%1").arg(i);
 		layersBgImages.push_back(layerName);
-		YAML::Node layer;
+		QJsonObject layer;
 		layer["color"] = "black";
 		layer["type"] = "continuous";
 		layer["width"] = "1";
 		layer["locked"] = "1";
 		layersNode[layerName] = layer;
 	}
-	std::vector<std::string> layersCrack;
-	for (int i = 0; i < cracks.size(); i++)
+	
+	QStringList layersCrack;
+	for (int i = 0; i < crackPairs.size(); i++)
 	{
-		std::string  layerName = "cracks_" + std::to_string(i);
+		QString layerName = QString("cracks_%1").arg(i);
 		layersCrack.push_back(layerName);
-		YAML::Node layer;
+		QJsonObject layer;
 		layer["color"] = "red";
 		layer["type"] = "continuous";
 		layer["width"] = "2";
@@ -1521,11 +1605,11 @@ void ccStichedImageViewer::saveDxf()
 	QDir dir(folderImageAbsolutePath);
 	dir.mkdir(folderImageAbsolutePath);
 
-	YAML::Node imagesNode;
+	QJsonObject imagesNode;
 	for (int i = 0; i < bgImages.size(); i++)
 	{
-		std::string  layerName = layersBgImages[i];
-		YAML::Node image; 
+		QString layerName = layersBgImages[i];
+		QJsonObject image; 
 		ccImage* img = bgImages[i];
 		CCVector3 minC;
 		CCVector3 maxC;
@@ -1533,176 +1617,229 @@ void ccStichedImageViewer::saveDxf()
 		maxC = img->getPositionBox().maxCorner();
 
 		image["layerName"] = layerName;
-		image["widthPx"] = std::to_string(img->getImage().width());
-		image["heightPx"] = std::to_string(img->getImage().width());
-		image["widthM"] = std::to_string(maxC.x-minC.x);
-		image["heightM"] = std::to_string(maxC.y-minC.y);
+		image["widthPx"] = QString::number(img->getImage().width());
+		image["heightPx"] = QString::number(img->getImage().height());
+		image["widthM"] = QString::number(maxC.x-minC.x);
+		image["heightM"] = QString::number(maxC.y-minC.y);
 		// position left bottom
-		image["xlb"] = std::to_string(minC.x);
-		image["ylb"] = std::to_string(minC.y);
-		image["zlb"] = std::to_string(0);
-		image["relPath"] = "./" + currentName.toStdString() + "/" + layerName + ".png";
+		image["xlb"] = QString::number(minC.x);
+		image["ylb"] = QString::number(minC.y);
+		image["zlb"] = QString::number(0);
+		image["relPath"] =QString( "./" + currentName + "/" + layerName + ".png");
 		
-		std::string imageName = "bgImage_" + std::to_string(i);
+		QString imageName = QString("bgImage_%1").arg(i);
 		imagesNode[imageName]= image;
 		// Export the image in a file
-		img->getImage().save(folderImageAbsolutePath + QString("/") + QString::fromStdString(imageName) + QString(".png"));
+		ccLog::Error(QString("Saving Img to:%1").arg(folderImageAbsolutePath + QString("/") + layerName + QString(".png")));
+		img->getImage().save(folderImageAbsolutePath + QString("/") + layerName + QString(".png"));
 	}
-	if (crackImages.size() == cracks.size())
-	{
 
-		for (int i = 0; i < crackImages.size(); i++)
+	for (int i = 0; i < crackPairs.size(); i++)
+	{
+		if (crackPairs[i].second)
 		{
-			std::string  layerName = layersCrack[i];
-			YAML::Node image;
-			ccImage* img = crackImages[i];
+			QString  layerName = layersCrack[i];
+			QJsonObject image;
+			ccImage* img = crackPairs[i].second;
 			CCVector3 minC;
 			CCVector3 maxC;
 			minC = img->getPositionBox().minCorner();
 			maxC = img->getPositionBox().maxCorner();
 
 			image["layerName"] = layerName;
-			image["widthPx"] = std::to_string(img->getImage().width());
-			image["heightPx"] = std::to_string(img->getImage().width());
-			image["widthM"] = std::to_string(maxC.x - minC.x);
-			image["heightM"] = std::to_string(maxC.y - minC.y);
+			image["widthPx"] = QString::number(img->getImage().width());
+			image["heightPx"] = QString::number(img->getImage().height());
+			image["widthM"] = QString::number(maxC.x - minC.x);
+			image["heightM"] = QString::number(maxC.y - minC.y);
 			// position left bottom
-			image["xlb"] = std::to_string(minC.x);
-			image["ylb"] = std::to_string(minC.y);
-			image["zlb"] = std::to_string(0);
-			image["relPath"] = "./" + currentName.toStdString() + "/" + layerName + ".png";
+			image["xlb"] = QString::number(minC.x);
+			image["ylb"] = QString::number(minC.y);
+			image["zlb"] = QString::number(0);
+			image["relPath"] = QString("./" + currentName + "/" + layerName + ".png");
 
-			std::string imageName = "crackImage_" + std::to_string(i);
+			QString imageName = QString("crackImage_%1").arg(i);
 			imagesNode[imageName] = image;
 			// Export the image in a file
-			img->getImage().save(folderImageAbsolutePath + QString("/") + QString::fromStdString(imageName) + QString(".png"));
+			img->getImage().save(folderImageAbsolutePath + QString("/") + layerName + QString(".png"));
 		}
 	}
-
+	
 	// Add cracks to yaml
 
-	YAML::Node polylinesNode;
-	float radius = m_radius;
-	float circumference = 2 * M_PI * radius;
-	CCVector3 center = m_center;
+	QJsonObject polylinesNode;
 
-	for (int i = 0; i < cracks.size(); i++)
+	for (int i = 0; i < crackPairs.size(); i++)
 	{
-		std::string  layerName = layersCrack[i];
-		YAML::Node polyline;
-		polyline["layerName"] = layerName;
-		std::string polyName = "crack_" + std::to_string(i);
-		ccPolyline* poly = cracks[i];
+		QString  layerName = layersCrack[i];
+		QJsonObject polylineNode;
+		
+		QString polyName = QString("crack_%1").arg(i);
+		ccPolyline* poly = crackPairs[i].first;
 	
 		// Transform polyline to vector of points unrolled
-		YAML::Node unrolledNode;
+		QJsonArray unrolledNode;
 		for (int j = 0; j < poly->size(); j++)
-		{
-			const CCVector3 *pt = poly->getPoint(i);
-			CCVector3 transPt = *pt - center;
-			float depth = sqrt(transPt.x * transPt.x + transPt.y *transPt.y);
-			//ProjectOnCylinder(AP, dim, params->radius, delta, longitude_rad);
-			float angle = -atan2(transPt.x, transPt.y);
-
-			float xCylinder = (angle / M_PI) * (circumference / 2);
-			//we project the point
-			//Pout.u[dim.x] = longitude_rad * radius;
-			YAML::Node pointNode;
-			pointNode.push_back(xCylinder); //x
-			pointNode.push_back(transPt.z);//y
-			pointNode.push_back(-depth);//z
-			
-			unrolledNode.push_back(transPt);
+		{ 
+			QJsonArray pointNode;
+			pointNode.push_back(poly->getPoint(j)->x); //x
+			pointNode.push_back(poly->getPoint(j)->y);//y
+			pointNode.push_back(poly->getPoint(j)->z);//z
+			unrolledNode.push_back(pointNode);
 		}
 		// Generate node from pts
-		polyline["pts"] = unrolledNode;
-		polylinesNode[polyName] = polyline;
+		polylineNode["layerName"] = layerName;
+		polylineNode["pts"] = unrolledNode;
+		polylineNode["color"] = "red";
+		polylinesNode[polyName] = polylineNode;
+	}
+
+	for (int i = 0; i < linkers.size(); i++)
+	{
+		QString  layerName = layersCrack[i];
+		QJsonObject polylineNode;
+
+		QString polyName = QString("linker_%1").arg(i);
+		std::vector<CCVector3> linker = linkers[i];
+
+		// Transform polyline to vector of points unrolled
+		if (!linker.empty())
+		{
+			QJsonArray linkerNode;
+				for (int j = 0; j < linker.size(); j++)
+				{
+					QJsonArray pointNode;
+					pointNode.push_back(linker[j].x); //x
+					pointNode.push_back(linker[j].y);//y
+					pointNode.push_back(linker[j].z);//z
+					linkerNode.push_back(pointNode);
+				}
+			// Generate node from pts
+			polylineNode["layerName"] = layerName;
+			polylineNode["pts"] = linkerNode;
+			polylineNode["color"] = "black";
+			polylinesNode[polyName] = polylineNode;
+		}
+	}
+
+	QJsonObject json;
+	json["layers"] = layersNode;
+	json["images"] = imagesNode;
+	json["polylines"] = polylinesNode;
+	QJsonDocument out;
+	out.setObject(json);
+	QByteArray bytes = out.toJson(QJsonDocument::Indented);
+	QFile file(jsonFilePath);
+	if (file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
+	{
+		QTextStream iStream(&file);
+		iStream.setCodec("utf-8");
+		iStream << bytes;
+		file.close();
+	}
+	else
+	{
+		ccLog::Error(QString("Failed to export the conversion file .yaml for DXF export. Make sure the document is closed"));
 	}
 
 
-	DxfFilter dxf;
-	dxf.saveToFileShaft(cracks, crackLinkers, bgImages, crackImages, selectedFile);
+	//Deleting unwanted unrolled cracks
+	for (int i = 0; i < crackPairs.size(); i++)
+	{
+		crackPairs[i].first->clear();
+	}
 
 }
 
 // Ouputs the linkers for the crack images and updates the image position
-void ccStichedImageViewer::generateLinkers(std::vector<ccPolyline*> polylines, std::vector<ccImage*> images, std::vector<std::vector<CCVector3>> &linkersOut, float paddingShaft, float paddingBetween) 
+void ccStichedImageViewer::generateLinkers(std::vector<std::pair<ccPolyline*,ccImage*>> &crackPairs,std::vector<std::vector<CCVector3>> &linkersOut, float paddingShaft, float paddingBetween) 
 {
 	
 	
 	// Polylines and images should be already sorted
 	// Image should be already positionned accordingly to the crack just need a horizontal shift
 	// Shift align all the boxed to right and scale down image
-	for (int i = 0; i < images.size(); i++)
+	// crackPairs first = crackPolyline second= crackImage
+	for (int i = 0; i < crackPairs.size(); i++)
 	{
-		ccPolyline* polyline = polylines[i];
-		CCVector3 bbMin, bbMax;
-		polyline->getBoundingBox(bbMin, bbMax);
-		float pxHeight = (float)images[i]->getImage().height();
-		float pxWidth = (float)images[i]->getImage().width();
-		float mWidth = bbMax.x - bbMin.x;
-		float mHeight = bbMax.y - bbMin.y;
-		
-		float ratioH = pxHeight / mHeight;
-		float ratioW = pxWidth / mWidth;
-		if (ratioH > ratioW) { ratioW = ratioH; }
-		// image size
-		mWidth = pxWidth / ratioW;
-		mHeight = pxHeight/ratioW;
-		// image position aligning and center
-		CCVector3 bbMinImg, bbMaxImg;
-		bbMinImg.x = m_radius * M_PI + paddingShaft;
-		bbMaxImg.x = bbMinImg.x + mWidth;
-		bbMinImg.y = bbMin.y - (mHeight - (bbMax.y - bbMin.y))/2;
-		bbMaxImg.y = bbMin.y + mHeight;
-		// updating image
-		ccBBox newPos;
-		newPos.minCorner = bbMinImg;
-		newPos.maxCorner = bbMaxImg;
-		images[i]->getPositionBox() = newPos;
+		if (crackPairs[i].second)
+		{
+			ccPolyline* polyline = crackPairs[i].first;
+			CCVector3 bbMin, bbMax;
+			polyline->getBoundingBox(bbMin, bbMax);
+			float pxHeight = (float)crackPairs[i].second->getImage().height();
+			float pxWidth = (float)crackPairs[i].second->getImage().width();
+			float mWidth = bbMax.x - bbMin.x;
+			float mHeight = bbMax.y - bbMin.y;
+
+			float ratioH = pxHeight / mHeight;
+			float ratioW = pxWidth / mWidth;
+			if (ratioH > ratioW) { ratioW = ratioH; }
+			// image size
+			mWidth = pxWidth / ratioW;
+			mHeight = pxHeight / ratioW;
+			// image position aligning and center
+			CCVector3 bbMinImg, bbMaxImg;
+			bbMinImg.x = m_radius * M_PI + paddingShaft;
+			bbMaxImg.x = bbMinImg.x + mWidth;
+			bbMinImg.y = bbMin.y - (mHeight - (bbMax.y - bbMin.y)) / 2;
+			bbMaxImg.y = bbMin.y + mHeight;
+			// updating image
+			ccBBox newPos(bbMinImg, bbMaxImg);
+			crackPairs[i].second->setPositionBox(newPos);
+		}
 	}
 
 	// Image should now shifting until they are cleared from overlapp
 	std::vector<ccBBox> placedBBox; 
-	for (int i = 0; i < images.size(); i++)
+	for (int i = 0; i < crackPairs.size(); i++)
 	{
-		ccBBox currentBBox = images[i]->getPositionBox;
-		for (int j = 0; i < placedBBox.size(); i++) 
+		if (crackPairs[i].second)
 		{
-			if (isBoxCrossing(placedBBox[j], currentBBox, paddingBetween))
+			ccBBox currentBBox = crackPairs[i].second->getPositionBox();
+			for (int j = 0; i < placedBBox.size(); i++)
 			{
-				// find shift
-				float xShift = placedBBox[j].maxCorner().x + paddingBetween;
-				currentBBox.maxCorner().x += xShift;
+				if (isBoxCrossing(placedBBox[j], currentBBox, paddingBetween))
+				{
+					// find shift
+					CCVector3 bbMin = currentBBox.minCorner();
+					CCVector3 bbMax = currentBBox.maxCorner();
+					float xShift = placedBBox[j].maxCorner().x + paddingBetween;
+					bbMin.x += xShift;
+					bbMax.x += xShift;
+					currentBBox = ccBBox(bbMin, bbMax);
+				}
 			}
+			placedBBox.push_back(currentBBox);
+			crackPairs[i].second->setPositionBox(currentBBox);
 		}
-		placedBBox.push_back(currentBBox);
-		images[i]->getPositionBox = currentBBox;
 	}
 	// Creating linkers
-	/**                                 ________
-			/\             |           |        |
-		   /  \/\Crack\  / |-----------| IMAGE  |
-					   \/  |           |________|
+	/**                                    ________
+			/\             |              |        |
+		   /  \/\Crack\  / |----linker----| IMAGE  |
+					   \/  |              |________|
 	**/
-	for (int i = 0; i < images.size(); i++)
+	for (int i = 0; i < crackPairs.size(); i++)
 	{
 		std::vector<CCVector3> pts;
-		CCVector3 bbMinImg, bbMaxImg, bbMinPoly, bbMaxPoly;
-		polylines[i]->getBoundingBox(bbMinPoly, bbMaxPoly);
-		bbMinImg = images[i]->getPositionBox().minCorner();
-		bbMaxImg = images[i]->getPositionBox().maxCorner();
-		
-		pts.push_back(CCVector3(bbMaxPoly.x + paddingBetween, bbMaxPoly.y, 0));
-		pts.push_back(CCVector3(bbMaxPoly.x + paddingBetween, bbMinPoly.y, 0));
-		pts.push_back(CCVector3(bbMaxPoly.x + paddingBetween, (bbMaxPoly.y + bbMinPoly.y)/2, 0));
-		pts.push_back(CCVector3(bbMinImg.x, (bbMaxImg.y + bbMinImg.y) / 2, 0 ));
+		if (crackPairs[i].second)
+		{
+			CCVector3 bbMinImg, bbMaxImg, bbMinPoly, bbMaxPoly;
+			crackPairs[i].first->getBoundingBox(bbMinPoly, bbMaxPoly);
+			bbMinImg = crackPairs[i].second->getPositionBox().minCorner();
+			bbMaxImg = crackPairs[i].second->getPositionBox().maxCorner();
+
+			pts.push_back(CCVector3(bbMaxPoly.x + paddingBetween, bbMaxPoly.y, 0));
+			pts.push_back(CCVector3(bbMaxPoly.x + paddingBetween, bbMinPoly.y, 0));
+			pts.push_back(CCVector3(bbMaxPoly.x + paddingBetween, (bbMaxPoly.y + bbMinPoly.y) / 2, 0));
+			pts.push_back(CCVector3(bbMinImg.x, (bbMaxImg.y + bbMinImg.y) / 2, 0));
+		}
 		linkersOut.push_back(pts);
 	}
 	return;
 }
 
-bool isBoxCrossing(ccBBox a, ccBBox b, float padding )
+bool ccStichedImageViewer::isBoxCrossing(ccBBox a, ccBBox b, float padding )
 {
 
 	return !(b.minCorner().x - padding > a.maxCorner().x + padding
@@ -1713,7 +1850,7 @@ bool isBoxCrossing(ccBBox a, ccBBox b, float padding )
 
 //
 template <typename T, typename Compare>
-std::vector<std::size_t> sort_permutation(
+std::vector<std::size_t> ccStichedImageViewer::sort_permutation(
 	const std::vector<T>& vec,
 	Compare& compare)
 {
@@ -1725,7 +1862,7 @@ std::vector<std::size_t> sort_permutation(
 }
 
 template <typename T>
-std::vector<T> apply_permutation(
+std::vector<T> ccStichedImageViewer::apply_permutation(
 	const std::vector<T>& vec,
 	const std::vector<std::size_t>& p)
 {

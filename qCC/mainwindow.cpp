@@ -5842,9 +5842,9 @@ void MainWindow::doActionUnrollClean()
 		addToDB(unrolledCloud);
 		m_ccStichedImageViewer->setUnrolledCloud(unrolledCloud);
 	}
-
 	updateUI();
-	
+	m_ccStichedImageViewer->setCenter(center);
+	m_ccStichedImageViewer->setRadius(radius);
 }
 
 ccGLWindow* MainWindow::getActiveGLWindow()
@@ -5867,7 +5867,6 @@ ccGLWindow* MainWindow::getActiveGLWindow()
 			return GLWindowFromWidget(subWindowList[0]->widget());
 		}
 	}
-
 	return nullptr;
 }
 

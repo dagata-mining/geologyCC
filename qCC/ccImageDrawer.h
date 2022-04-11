@@ -169,7 +169,7 @@ public:
 	void generateSquarePolygonFromPoint(QPoint pt, float squareWidth);
 	
 	// creates a list of points for the polyline with precision in degrees
-	void segmentToPoly(float degPrecision);
+	void segmentToPoly(float degPrecision, bool exportImage = true);
 	
 	// Create section polylines 
 	void sectionToPoly(float degPrecision);

@@ -14,11 +14,18 @@ if( ${OPTION_USE_DXF_LIB} )
 	add_subdirectory( "${DXF_LIB_DIR}" )
 	target_link_libraries( ${PROJECT_NAME} dxflib  )
 
-	#set( LIBREDWG_LIB_DIR "extern/libredwg" CACHE PATH "libredwg lib path" )
-	#add_subdirectory( "${LIBREDWG_LIB_DIR}" )
-	#target_link_libraries( ${PROJECT_NAME} libredwg )
-	find_package(yaml-cpp)
-	target_link_libraries( ${PROJECT_NAME} yaml-cpp  )
+	#set( YAML_LIB_DIR "extern/yaml-cpp" CACHE PATH "Yaml lib path" )
+	#add_subdirectory( "${YAML_LIB_DIR}" )
+	#target_link_libraries( ${PROJECT_NAME} yaml-cpp  )
+	
+	#find_package(nlohmann_json CONFIG REQUIRED)
+	#include_directories(${YAML_CPP_INCLUDE_DIRS})
+	
+	#target_link_libraries( ${PROJECT_NAME} ${YAML_CPP_LIBRARIES} "C:/Program Files/YAML_CPP/lib/libyaml-cppmd.lib" "C:/Program Files/YAML_CPP/lib/libyaml-cppmt.lib")
+	
+	#target_link_libraries( ${PROJECT_NAME} nlohmann_json)
+	#target_link_libraries( ${PROJECT_NAME} "C:/Program Files/YAML_CPP/lib/yaml-cpp.lib"  )
+	#target_include_directories( ${PROJECT_NAME} PUBLIC "C:/Program Files/YAML_CPP/include/yaml-cpp"  )
 
 	
 endif()
