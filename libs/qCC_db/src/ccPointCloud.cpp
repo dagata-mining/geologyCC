@@ -3829,7 +3829,7 @@ ccPointCloud* ccPointCloud::unroll(	UnrollMode mode,
 			AP = *Pin - cylParams->center;
 			//ProjectOnCylinder(AP, dim, params->radius, delta, longitude_rad);
 			float depth = sqrt(AP.x * AP.x + AP.y *AP.y);
-			float angle = -atan2(AP.x, AP.y);
+			float angle = atan2(AP.x, AP.y);
 			
 			float xCylinder = (angle / M_PI) * (circumference / 2);
 			//we project the point

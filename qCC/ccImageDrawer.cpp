@@ -1309,13 +1309,13 @@ void ccImageDrawer::segmentToPoly(float degPrecision, bool exportImage)
 	MainWindow::TheInstance()->addToDB(finalPolyline);
 	CCVector3 bbMin, bbMax;
 	finalPolyline->getBoundingBox(bbMin, bbMax);
-	finalPolyline->setName(QString("PolylineCrack_%1m-%2").arg(nbrId).arg((int)bbMax.z));
+	finalPolyline->setName(QString("PolylineCrack_z%2m-%1").arg(nbrId).arg((int)bbMax.z));
 	if (exportImage)
 	{
 		// Verify is image with same name, if yes remove
 		for (int i = 0; i < nbrImg; i++)
 		{
-			if (filteredChildrenImg[i]->getName() == QString("ImageCrack_y%1m-%2").arg(nbrId).arg((int)bbMax.z))
+			if (filteredChildrenImg[i]->getName() == QString("ImageCrack_z%2m-%1").arg(nbrId).arg((int)bbMax.z))
 			{
 				MainWindow::TheInstance()->removeFromDB(filteredChildrenImg[i]);
 			}
@@ -1324,7 +1324,7 @@ void ccImageDrawer::segmentToPoly(float degPrecision, bool exportImage)
 		QRect rect(QPoint(minXImg, minYImg), QPoint(maxXImg, maxYImg));
 		QImage croppedImage = m_image.toImage().copy(rect);
 		polyImage->setData(croppedImage);
-		polyImage->setName(QString("ImageCrack_y%1m-%2").arg(nbrId).arg((int)bbMax.z));
+		polyImage->setName(QString("ImageCrack_z%2m-%1").arg(nbrId).arg((int)bbMax.z));
 		m_polylineObject->addChild(polyImage);
 	}
 	

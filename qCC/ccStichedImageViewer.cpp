@@ -887,7 +887,7 @@ void ccStichedImageViewer::setCameraNodePosition()
 }
 
 
-ccImage* ccStichedImageViewer::generateImageUnroll(float zMax, float zMin, float color)
+ccImage* ccStichedImageViewer::generateImageUnroll(float zMax, float zMin)
 {
 
 	if (!m_unrolledCloud) { return nullptr; }
@@ -1011,6 +1011,153 @@ ccImage* ccStichedImageViewer::generateImageUnroll(float zMax, float zMin, float
 	ccBBox box(bbMin,bbMax);
 	img->setPositionBox(box);
 	return img;
+
+	//win->setCameraPos(P);
+	//CCVector3d v(0, 0, focalDistance);
+	//win->moveCamera(v);
+
+}
+
+std::vector<ccImage*> ccStichedImageViewer::generateImagesUnroll(float zMax, float zMin, float slice)
+{
+	std::vector<ccImage*> imagesOutput;
+	if (!m_unrolledCloud) { return imagesOutput; }
+	
+	//get init slice
+	float initY = floor(zMin / slice) * slice;
+	while (initY < zMax)
+	{
+		float bottomY = initY;
+		float topY = initY + slice;
+		//Generate a new view
+		ccViewportParameters imageViewport;
+		CCVector3 bbMin;
+		CCVector3 bbMax;
+		ccImage* img(new ccImage);
+		QImage image;
+		m_unrolledCloud->getBoundingBox(bbMin, bbMax);
+		bbMin.y = bottomY;
+		bbMax.y = topY;
+
+		ccGLWindow* win = MainWindow::GetActiveGLWindow();
+		float windowHeight = (float)win->glHeight();
+		float windowWidth = (float)win->glWidth();
+		//double targetWidth = sqrt(pow((bbMax-bbMin).x,2)+ pow((bbMax - bbMin).y, 2));
+		double targetWidth = (bbMax - bbMin).x;
+		double targetHeight = (bbMax - bbMin).y;
+		double targetRatio = targetHeight / targetWidth;
+		double windowRatio = windowHeight / windowWidth;
+		//ccLog::Error(QString("Target Height: %1 ratioTarget: %2 ratioWindow: %3").arg(targetHeight).arg(targetRatio).arg(windowRatio));
+
+		//Center image
+		double focalDistance;
+		CCVector3d eye(0, 0, 1);
+		CCVector3d center(0, 0, 0);
+		CCVector3d top(0, 1, 0);
+		imageViewport.viewMat = ccGLMatrixd::FromViewDirAndUpDir(center - eye, top);
+		CCVector3d P((bbMax + bbMin).x / 2, (bbMax + bbMin).y / 2, 0);
+		ccLog::Print(QString("Center Camera %1, %2, %3").arg(P.x).arg(P.y).arg(P.z));
+		imageViewport.setCameraCenter(P, false);
+		
+		if (targetRatio > windowRatio)
+		{
+			//Optimizing Height
+			double zoom = targetHeight * 200 / windowHeight;
+
+			if (windowHeight < windowWidth)
+			{
+				targetHeight *= static_cast<double>(windowWidth / windowHeight);
+				focalDistance = targetHeight / (imageViewport.computeDistanceToWidthRatio());
+			}
+			else
+			{
+				double distance = (windowWidth / 2) / std::tan(CCCoreLib::DegreesToRadians(imageViewport.fov_deg / 2.0));
+				double newFOV = atan((windowHeight / 2) / distance);
+				ccLog::Print(QString::number(newFOV));
+				//double multipleHeight = targetHeight / windowHeight;
+				targetHeight *= static_cast<double>(windowWidth / windowHeight);
+				focalDistance = targetHeight / (2 * std::tan(newFOV));
+			}
+
+			imageViewport.setFocalDistance(focalDistance);
+			win->setViewportParameters(imageViewport);
+			win->setPointSize(2);
+			win->redraw();
+
+			while (image.isNull())
+			{
+				image = win->renderToImage(zoom, true, false, true);
+				if (zoom < 1)
+				{
+					ccLog::Error("Could not export Bg Image, due to momory shortage");
+					return imagesOutput;
+				}
+				if (image.isNull())
+				{
+					zoom -= 1;
+				}
+			}
+			ccLog::Print(QString("Image created at zoom of %1").arg(zoom));
+
+			// Image should be adapted to the height
+			qreal imgHeight = image.height();
+			qreal theoricalWidth = imgHeight / targetRatio;
+			qreal crop = (image.width() - theoricalWidth) / 2;
+			QRect rect(crop, 0, theoricalWidth, imgHeight);
+			image = image.copy(rect);
+		}
+		else
+		{
+			//Optimizing Width
+			double zoom = targetWidth * 200 / windowWidth;
+
+			if (windowHeight > windowWidth)
+			{
+				targetWidth *= static_cast<double>(windowWidth / windowHeight);
+			}
+
+			focalDistance = targetWidth / (imageViewport.computeDistanceToWidthRatio());
+
+			imageViewport.setFocalDistance(focalDistance);
+			win->setViewportParameters(imageViewport);
+			win->setPointSize(2);
+			win->redraw();
+
+			while (image.isNull())
+			{
+				image = win->renderToImage(zoom, true, false, true);
+				zoom -= 1;
+				if (zoom < 1)
+				{
+					ccLog::Error("Could not export Bg Image, due to momory shortage");
+					return imagesOutput;
+				}
+				if (image.isNull())
+				{
+					zoom -= 1;
+				}
+			}
+			ccLog::Print(QString("Image created at zoom of %1").arg(zoom));
+
+			// Image should be adapted to the width
+			qreal imgWidth = image.width();
+			qreal theoricalHeight = imgWidth * targetRatio;
+			qreal crop = (image.height() - theoricalHeight) / 2;
+			QRect rect(0, crop, imgWidth, theoricalHeight);
+			image = image.copy(rect);
+		}
+		img->setData(image);
+		bbMin = CCVector3(bbMin.x, bbMin.y, 0);
+		bbMax = CCVector3(bbMax.x, bbMax.y, 0);
+		ccBBox box(bbMin, bbMax);
+		img->setPositionBox(box);
+		imagesOutput.push_back(img);
+		
+		// Iterate
+		initY += slice;
+	}
+	
+	return imagesOutput;
 
 	//win->setCameraPos(P);
 	//CCVector3d v(0, 0, focalDistance);
@@ -1464,15 +1611,18 @@ void ccStichedImageViewer::saveDxf()
 	root->toggleVisibility_recursive();
 	m_unrolledCloud->setEnabled(true);
 	m_unrolledCloud->setVisible(true);
-
-	std::vector<ccImage*> bgImages;
+	
+	CCVector3 bbMin, bbMax;
+	m_unrolledCloud->getBoundingBox(bbMin, bbMax);
+	std::vector<std::vector<ccImage*>> bgImages;
 	for (int i = 0; i < m_unrolledCloud->getNumberOfScalarFields(); i++)
 	{
 		m_unrolledCloud->setCurrentDisplayedScalarField(i);
-		ccImage* img = generateImageUnroll(0, 0, 0);
-		if (img)
+		
+		std::vector<ccImage*> images = generateImagesUnroll(bbMax.y, bbMin.y,10);
+		if (!images.empty())
 		{
-			bgImages.push_back(img);
+			bgImages.push_back(images);
 		}
 	}
 	m_unrolledCloud->setEnabled(false);
@@ -1531,7 +1681,7 @@ void ccStichedImageViewer::saveDxf()
 			CCVector3 transPt = *pt - center;
 			float depth = sqrt(transPt.x * transPt.x + transPt.y *transPt.y);
 			//ProjectOnCylinder(AP, dim, params->radius, delta, longitude_rad);
-			float angle = -atan2(transPt.x, transPt.y);
+			float angle = atan2(transPt.x, transPt.y);
 			float xCylinder = (angle / M_PI) * (circumference / 2);
 			
 			transPt.x = xCylinder; //x
@@ -1567,8 +1717,11 @@ void ccStichedImageViewer::saveDxf()
 	std::vector<std::vector<CCVector3>> linkers;
 	ccStichedImageViewer::generateLinkers(crackPairs, linkers, 1.0, 0.1);
 
-
-	
+	// Creating Grids
+	std::vector<std::pair<CCVector3, CCVector3>> lines;
+	std::vector<std::pair<CCVector3, QString>> texts;
+	annotation(bbMin.y, bbMax.y, m_radius, 0.5, 10, lines, texts);
+		
 	//Layers
 	QJsonObject layersNode;
 	
@@ -1579,9 +1732,9 @@ void ccStichedImageViewer::saveDxf()
 		QString  layerName = QString("shaftImage_%1").arg(i);
 		layersBgImages.push_back(layerName);
 		QJsonObject layer;
-		layer["color"] = "black";
-		layer["type"] = "continuous";
-		layer["width"] = "1";
+		layer["color"] = "";
+		layer["type"] = "";
+		layer["width"] = "";
 		layer["locked"] = "1";
 		layersNode[layerName] = layer;
 	}
@@ -1593,11 +1746,21 @@ void ccStichedImageViewer::saveDxf()
 		layersCrack.push_back(layerName);
 		QJsonObject layer;
 		layer["color"] = "red";
-		layer["type"] = "continuous";
-		layer["width"] = "2";
+		layer["type"] = "";
+		layer["width"] = "";
 		layer["locked"] = "0";
 		layersNode[layerName] = layer;
 		
+	}
+	// Grid Layer
+	{
+		QString layerName = QString("Grid");
+		QJsonObject layer;
+		layer["color"] = "light_grey";
+		layer["type"] = "";
+		layer["width"] = "";
+		layer["locked"] = "1";
+		layersNode[layerName] = layer;
 	}
 
 	// Add the images to yaml and write them also 
@@ -1609,29 +1772,35 @@ void ccStichedImageViewer::saveDxf()
 	for (int i = 0; i < bgImages.size(); i++)
 	{
 		QString layerName = layersBgImages[i];
-		QJsonObject image; 
-		ccImage* img = bgImages[i];
-		CCVector3 minC;
-		CCVector3 maxC;
-		minC = img->getPositionBox().minCorner();
-		maxC = img->getPositionBox().maxCorner();
+		std::vector<ccImage*> croppedImages = bgImages[i];
+		for (int j = 0; j < croppedImages.size(); j++)
+		{
+			QJsonObject image;
+			QString imageName = QString("bgImage_%1_%2").arg(i).arg(j);
+			ccImage* img = croppedImages[j];
+			CCVector3 minC;
+			CCVector3 maxC;
+			minC = img->getPositionBox().minCorner();
+			maxC = img->getPositionBox().maxCorner();
 
-		image["layerName"] = layerName;
-		image["widthPx"] = QString::number(img->getImage().width());
-		image["heightPx"] = QString::number(img->getImage().height());
-		image["widthM"] = QString::number(maxC.x-minC.x);
-		image["heightM"] = QString::number(maxC.y-minC.y);
-		// position left bottom
-		image["xlb"] = QString::number(minC.x);
-		image["ylb"] = QString::number(minC.y);
-		image["zlb"] = QString::number(0);
-		image["relPath"] =QString( "./" + currentName + "/" + layerName + ".png");
+			image["layerName"] = layerName;
+			image["widthPx"] = QString::number(img->getImage().width());
+			image["heightPx"] = QString::number(img->getImage().height());
+			image["widthM"] = QString::number(maxC.x - minC.x);
+			image["heightM"] = QString::number(maxC.y - minC.y);
+			// position left bottom
+			image["xlb"] = QString::number(minC.x);
+			image["ylb"] = QString::number(minC.y);
+			image["zlb"] = QString::number(0);
+			image["relPath"] = QString("./" + currentName + "/" + imageName + ".png");
+
+			
+			imagesNode[imageName] = image;
+			// Export the image in a file
+			//ccLog::Error(QString("Saving Img to:%1").arg(folderImageAbsolutePath + QString("/") + imageName + QString(".png")));
+			img->getImage().save(folderImageAbsolutePath + QString("/") + imageName + QString(".png"));
+		}
 		
-		QString imageName = QString("bgImage_%1").arg(i);
-		imagesNode[imageName]= image;
-		// Export the image in a file
-		ccLog::Error(QString("Saving Img to:%1").arg(folderImageAbsolutePath + QString("/") + layerName + QString(".png")));
-		img->getImage().save(folderImageAbsolutePath + QString("/") + layerName + QString(".png"));
 	}
 
 	for (int i = 0; i < crackPairs.size(); i++)
@@ -1689,7 +1858,9 @@ void ccStichedImageViewer::saveDxf()
 		// Generate node from pts
 		polylineNode["layerName"] = layerName;
 		polylineNode["pts"] = unrolledNode;
-		polylineNode["color"] = "red";
+		polylineNode["color"] = "";
+		polylineNode["width"] = "0.3";
+		polylineNode["type"] = "";
 		polylinesNode[polyName] = polylineNode;
 	}
 
@@ -1717,14 +1888,60 @@ void ccStichedImageViewer::saveDxf()
 			polylineNode["layerName"] = layerName;
 			polylineNode["pts"] = linkerNode;
 			polylineNode["color"] = "black";
+			polylineNode["width"] = "0.25";
+			polylineNode["type"] = "dashed";
 			polylinesNode[polyName] = polylineNode;
 		}
+	}
+	// Add grid
+	QJsonObject linesNode;
+	for (int i = 0; i < lines.size(); i++)
+	{
+		QJsonObject lineNode;
+		// Generate node from pts
+		lineNode["layerName"] = QString("Grid");
+		QJsonArray pt1;
+		pt1.push_back(lines[i].first.x); //x
+		pt1.push_back(lines[i].first.y);//y
+		pt1.push_back(lines[i].first.z);//z
+		QJsonArray pt2;
+		pt2.push_back(lines[i].second.x); //x
+		pt2.push_back(lines[i].second.y);//y
+		pt2.push_back(lines[i].second.z);//z
+		
+		lineNode["pt1"] = pt1;
+		lineNode["pt2"] = pt2;
+		lineNode["color"] = "";
+		lineNode["width"] = "";
+		lineNode["type"] = "";
+		linesNode[QString("gridline_%1").arg(i)] = lineNode;
+	}
+
+	// Add text
+	QJsonObject textsNode;
+	for (int i = 0; i < texts.size(); i++)
+	{
+		QJsonObject textNode;
+		// Generate node from pts
+		textNode["layerName"] = QString("Grid");
+
+		textNode["xlb"] = texts[i].first.x; //x
+		textNode["ylb"] = texts[i].first.y; //x
+		textNode["zlb"] = texts[i].first.z; //x
+
+		textNode["text"] = texts[i].second;
+		textNode["color"] = "";
+		textNode["size"] = "0.2";
+		textNode["type"] = "";
+		textsNode[QString("gridtext_%1").arg(i)] = textNode;
 	}
 
 	QJsonObject json;
 	json["layers"] = layersNode;
 	json["images"] = imagesNode;
 	json["polylines"] = polylinesNode;
+	json["lines"] = linesNode;
+	json["texts"] = textsNode;
 	QJsonDocument out;
 	out.setObject(json);
 	QByteArray bytes = out.toJson(QJsonDocument::Indented);
@@ -1773,7 +1990,7 @@ void ccStichedImageViewer::generateLinkers(std::vector<std::pair<ccPolyline*,ccI
 
 			float ratioH = pxHeight / mHeight;
 			float ratioW = pxWidth / mWidth;
-			if (ratioH > ratioW) { ratioW = ratioH; }
+			if (ratioH < ratioW) { ratioW = ratioH; }
 			// image size
 			mWidth = pxWidth / ratioW;
 			mHeight = pxHeight / ratioW;
@@ -1781,8 +1998,8 @@ void ccStichedImageViewer::generateLinkers(std::vector<std::pair<ccPolyline*,ccI
 			CCVector3 bbMinImg, bbMaxImg;
 			bbMinImg.x = m_radius * M_PI + paddingShaft;
 			bbMaxImg.x = bbMinImg.x + mWidth;
-			bbMinImg.y = bbMin.y - (mHeight - (bbMax.y - bbMin.y)) / 2;
-			bbMaxImg.y = bbMin.y + mHeight;
+			bbMinImg.y = (bbMin.y + bbMax.y)/2 - (mHeight/2);
+			bbMaxImg.y = (bbMin.y + bbMax.y) / 2 + (mHeight / 2);
 			// updating image
 			ccBBox newPos(bbMinImg, bbMaxImg);
 			crackPairs[i].second->setPositionBox(newPos);
@@ -1796,14 +2013,15 @@ void ccStichedImageViewer::generateLinkers(std::vector<std::pair<ccPolyline*,ccI
 		if (crackPairs[i].second)
 		{
 			ccBBox currentBBox = crackPairs[i].second->getPositionBox();
-			for (int j = 0; i < placedBBox.size(); i++)
+			for (int j = 0; j < placedBBox.size(); j++)
 			{
 				if (isBoxCrossing(placedBBox[j], currentBBox, paddingBetween))
 				{
 					// find shift
+					//ccLog::Error("box crossed");
 					CCVector3 bbMin = currentBBox.minCorner();
 					CCVector3 bbMax = currentBBox.maxCorner();
-					float xShift = placedBBox[j].maxCorner().x + paddingBetween;
+					float xShift = (placedBBox[j].maxCorner().x - placedBBox[j].minCorner().x) + paddingBetween;
 					bbMin.x += xShift;
 					bbMax.x += xShift;
 					currentBBox = ccBBox(bbMin, bbMax);
@@ -1837,6 +2055,84 @@ void ccStichedImageViewer::generateLinkers(std::vector<std::pair<ccPolyline*,ccI
 		linkersOut.push_back(pts);
 	}
 	return;
+}
+
+void  ccStichedImageViewer::annotation(float yMin, float yMax, float radius, float padding, float slice,
+	std::vector<std::pair<CCVector3, CCVector3>> &lines, std::vector<std::pair<CCVector3, QString>> &text)
+{
+	
+	CCVector3 pt1;
+	CCVector3 pt2;
+	// Horizontal lines
+	float initY = floor(yMin / slice) * slice;
+	float savedY = initY;
+	while (initY < yMax)
+	{
+		pt1.x = -radius * M_PI - padding;
+		pt2.x = radius * M_PI + padding;
+		pt1.y = initY;
+		pt2.y = initY;
+		lines.push_back(std::make_pair(pt1, pt2));
+		pt1.x -= 0.6;
+		pt1.y -= 0.3;
+		text.push_back(std::make_pair(pt1, QString("%1m").arg(initY)));
+		pt2.x += 0.2;
+		pt2.y -= 0.3;
+		text.push_back(std::make_pair(pt2, QString("%1m").arg(initY)));
+		initY += slice;
+	}
+
+	// Generate orientations axis full length
+	// South left
+	yMin = savedY;
+	yMax = initY;
+	pt1.x = -radius * M_PI;
+	pt2.x = -radius * M_PI;
+	pt1.y = yMax + padding;
+	pt2.y = yMin - padding;
+	lines.push_back(std::make_pair(pt1, pt2));
+	pt1.y += 0.2;
+	pt1.x -= 0.1;
+	text.push_back(std::make_pair(pt1, QString("S")));
+	// West
+	pt1.x = -radius * M_PI_2;
+	pt2.x = -radius * M_PI_2;
+	pt1.y = yMax + padding;
+	pt2.y = yMin - padding;
+	lines.push_back(std::make_pair(pt1, pt2));
+	pt1.y += 0.2;
+	pt1.x -= 0.1;
+	text.push_back(std::make_pair(pt1, QString("W")));
+	// North
+	pt1.x = 0;
+	pt2.x = 0;
+	pt1.y = yMax + padding;
+	pt2.y = yMin - padding;
+	lines.push_back(std::make_pair(pt1, pt2));
+	pt1.y += 0.2;
+	pt1.x -= 0.1;
+	text.push_back(std::make_pair(pt1, QString("N")));
+	// East
+	pt1.x = radius * M_PI_2;
+	pt2.x = radius * M_PI_2;
+	pt1.y = yMax + padding;
+	pt2.y = yMin - padding;
+	lines.push_back(std::make_pair(pt1, pt2));
+	pt1.y += 0.2;
+	pt1.x -= 0.1;
+	text.push_back(std::make_pair(pt1, QString("E")));
+	// South right
+	pt1.x = radius * M_PI;
+	pt2.x = radius * M_PI;
+	pt1.y = yMax + padding;
+	pt2.y = yMin - padding;
+	lines.push_back(std::make_pair(pt1, pt2));
+	pt1.y += 0.2;
+	pt1.x -= 0.1;
+	text.push_back(std::make_pair(pt1, QString("S")));
+
+	return; 
+
 }
 
 bool ccStichedImageViewer::isBoxCrossing(ccBBox a, ccBBox b, float padding )

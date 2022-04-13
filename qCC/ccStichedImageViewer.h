@@ -237,7 +237,8 @@ private:
 	
 
 	// generate image unrolled
-	ccImage* generateImageUnroll(float zMax, float zMin, float color);
+	ccImage* generateImageUnroll(float zMax, float zMin);
+	std::vector<ccImage*> generateImagesUnroll(float zMax, float zMin, float slice);
 
 	// Clean Cloud
 	
@@ -248,6 +249,10 @@ private:
 	// Generate linkers
 	void generateLinkers(std::vector<std::pair<ccPolyline*, ccImage*>> &crackPairs, std::vector<std::vector<CCVector3>> &linkersOut,
 		float paddingShaft = 1.5, float paddingBetween = 0.1);
+	
+	// Generate annotations
+	void  annotation(float yMin, float yMax, float radius,float padding, float slice, 
+		std::vector<std::pair<CCVector3, CCVector3>> &lines, std::vector<std::pair<CCVector3, QString>> &text);
 
 	//Permutation
 	bool isBoxCrossing(ccBBox a, ccBBox b, float padding);
